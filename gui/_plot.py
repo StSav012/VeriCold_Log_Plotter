@@ -105,8 +105,8 @@ class Plot(QWidget):
 
         def on_end_time_changed(new_time: QDateTime):
             self.start_time.blockSignals(True)
-            if new_time.addSecs(-self.time_span.total_seconds) >= self.start_time.minimumDateTime():
-                self.start_time.setDateTime(new_time.addSecs(-self.time_span.total_seconds))
+            if new_time.addSecs(-round(self.time_span.total_seconds)) >= self.start_time.minimumDateTime():
+                self.start_time.setDateTime(new_time.addSecs(-round(self.time_span.total_seconds)))
             else:
                 self.start_time.setDateTime(self.start_time.minimumDateTime())
                 self.time_span.blockSignals(True)
@@ -119,8 +119,8 @@ class Plot(QWidget):
 
         def on_time_span_changed(delta: timedelta):
             self.start_time.blockSignals(True)
-            if self.end_time.dateTime().addSecs(-delta.total_seconds()) >= self.start_time.minimumDateTime():
-                self.start_time.setDateTime(self.end_time.dateTime().addSecs(-delta.total_seconds()))
+            if self.end_time.dateTime().addSecs(-round(delta.total_seconds())) >= self.start_time.minimumDateTime():
+                self.start_time.setDateTime(self.end_time.dateTime().addSecs(-round(delta.total_seconds())))
             else:
                 self.start_time.setDateTime(self.start_time.minimumDateTime())
                 self.time_span.blockSignals(True)
