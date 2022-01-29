@@ -176,6 +176,7 @@ class TimeSpanEdit(QAbstractSpinBox):
         # why do we call the fix-up manually??
         if self.validate(self.text(), self.lineEdit().cursorPosition())[0] != QValidator.State.Acceptable:
             self.fixup(self.text())
+        delta_changed: bool = self.time_delta != self._last_correct_delta
         self.time_delta = self.time_delta  # not an error, we need the time to be normalized
-        if self.time_delta != self._last_correct_delta:
+        if delta_changed:
             self.timeSpanChanged.emit(self.time_delta)
