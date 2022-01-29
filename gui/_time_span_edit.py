@@ -26,6 +26,8 @@ class TimeDeltaValidator(QValidator):
             return QValidator.State.Invalid, text, cursor_position
 
         parts: List[str] = text.split(':')
+        if not parts[-1]:  # text ends with ':', the rest has not been entered yet
+            return QValidator.State.Intermediate, text, cursor_position
         ok: bool
         seconds: float
         seconds, ok = self.locale().toDouble(parts[-1])
