@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime, timedelta
 from itertools import cycle
-from typing import Any, List, Optional, Tuple, Iterable
+from typing import Any, Iterable, List, Optional, Tuple, Union
 
 import numpy as np
 import pyqtgraph as pg
 from PySide6.QtCore import Qt, QDateTime, QEvent, QPointF, QRectF, QCoreApplication
-from PySide6.QtGui import QColor, QAction
+from PySide6.QtGui import QAction, QColor, QPen
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QDateTimeEdit
 from pyqtgraph.GraphicsScene.mouseEvents import MouseClickEvent
 
@@ -249,10 +249,13 @@ class Plot(QWidget):
         self.time_span.setEnabled(bool(self.lines))
 
     def replot(self, index: int, data_model: DataModel, x_column_name: str, y_column_name: str, *,
-               color: Optional[QColor] = None, roll: bool = False) -> None:
+               color: Optional[Union[QColor, QPen]] = None, roll: bool = False) -> None:
         if color is None:
             color = self.lines[index].opts['pen']
-        color.setCosmetic(False)
+        if isinstance(color, QPen):
+            color.setCosmetic(False)
+        else:
+            color = pg.mkPen(color, cosmetic=False)
         x_column: int = data_model.header.index(x_column_name)
         y_column: int = data_model.header.index(y_column_name)
 
