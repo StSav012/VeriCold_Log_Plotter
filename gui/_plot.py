@@ -4,7 +4,7 @@ from itertools import cycle
 from typing import Any, List, Optional, Tuple, Iterable
 
 import pyqtgraph as pg
-from PySide6.QtCore import QPointF, QRectF, Qt, QDateTime
+from PySide6.QtCore import Qt, QDateTime, QEvent, QPointF, QRectF
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QDateTimeEdit
 
@@ -30,6 +30,7 @@ class Plot(QWidget):
         self.canvas: pg.PlotItem = plot.getPlotItem()
         self.canvas.setAxisItems({'bottom': pg.DateAxisItem()})
         self.canvas.vb.setAutoVisible(x=True, y=True)
+        self.canvas.vb.setMouseMode(pg.ViewBox.RectMode)
         layout.addWidget(plot)
         cursor_balloon: pg.TextItem = pg.TextItem()
         plot.addItem(cursor_balloon, True)  # ignore bounds
@@ -89,11 +90,17 @@ class Plot(QWidget):
             self.end_time.blockSignals(False)
             self.start_time.blockSignals(False)
 
+        def on_plot_left(event: QEvent) -> None:
+            self._mouse_moved_signal_proxy.flush()
+            cursor_balloon.setVisible(False)
+            event.accept()
+
         self._mouse_moved_signal_proxy: pg.SignalProxy = pg.SignalProxy(plot.scene().sigMouseMoved,
                                                                         rateLimit=10, slot=on_mouse_moved)
         self._axis_range_changed_signal_proxy: pg.SignalProxy = pg.SignalProxy(plot.sigRangeChanged,
                                                                                rateLimit=10, slot=on_lim_changed)
         self._last_time_range_rolled: datetime = datetime.fromtimestamp(0)
+        plot.leaveEvent = on_plot_left
 
         def on_start_time_changed(new_time: QDateTime):
             self.time_span.blockSignals(True)
