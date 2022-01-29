@@ -1,22 +1,37 @@
 # coding: utf-8
 from datetime import timedelta
-from typing import Tuple, List, cast
+from typing import cast, List, Optional, Tuple
 
 from PySide6.QtCore import QDateTime, Qt, Signal, QSize
-from PySide6.QtGui import QFontMetrics, QValidator
-from PySide6.QtWidgets import QAbstractSpinBox, QSizePolicy
+from PySide6.QtGui import QValidator
+from PySide6.QtWidgets import QAbstractSpinBox, QStyle, QStyleOptionSpinBox, QWidget
 
 __all__ = ['TimeSpanEdit']
+
+
+def _value_to_text(delta: timedelta) -> str:
+    days: int = delta.days
+    seconds: float = delta.seconds % 60 + 1e-6 * delta.microseconds
+    minutes: int = (delta.seconds // 60) % 60
+    hours: int = delta.seconds // 3600
+    seconds_str: str = f'{seconds:02.0f}' if abs(seconds % 1.0) < 0.001 else f'{seconds:06.3f}'
+    if days > 0:
+        return f'{days}:{hours:02d}:{minutes:02d}:{seconds_str}'
+    elif hours > 0:
+        return f'{hours:02d}:{minutes:02d}:{seconds_str}'
+    else:
+        return f'{minutes:02d}:{seconds_str}'
 
 
 class TimeSpanEdit(QAbstractSpinBox):
     timeSpanChanged: Signal = Signal(timedelta, name='timeSpanChanged')
 
-    def __init__(self, parent) -> None:
+    _MAX_TEXT: str = _value_to_text(timedelta.max)
+
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
 
         self.setAlignment(cast(Qt.Alignment, Qt.AlignmentFlag.AlignRight))
-        self.lineEdit().setSizePolicy(QSizePolicy(QSizePolicy.Policy.Fixed, self.sizePolicy().verticalPolicy()))
 
         self._last_correct_delta: timedelta = timedelta(days=1)
 
@@ -30,8 +45,24 @@ class TimeSpanEdit(QAbstractSpinBox):
             self.time_delta = self._last_correct_delta
 
     def sizeHint(self) -> QSize:
-        # https://stackoverflow.com/a/68142315/8554611
-        return QSize(QFontMetrics(self.lineEdit().font()).boundingRect(self.text()).size())
+        # from the source of QAbstractSpinBox
+        h: int = self.lineEdit().sizeHint().height()
+        w: int = self.fontMetrics().horizontalAdvance(TimeSpanEdit._MAX_TEXT + ' ')
+        w += 2  # cursor blinking space
+        opt: QStyleOptionSpinBox = QStyleOptionSpinBox()
+        self.initStyleOption(opt)
+        hint: QSize = QSize(w, h)
+        return self.style().sizeFromContents(QStyle.ContentsType.CT_SpinBox, opt, hint, self)
+
+    def minimumSizeHint(self) -> QSize:
+        # from the source of QAbstractSpinBox
+        h: int = self.lineEdit().minimumSizeHint().height()
+        w: int = self.fontMetrics().horizontalAdvance(TimeSpanEdit._MAX_TEXT + ' ')
+        w += 2  # cursor blinking space
+        opt: QStyleOptionSpinBox = QStyleOptionSpinBox()
+        self.initStyleOption(opt)
+        hint: QSize = QSize(w, h)
+        return self.style().sizeFromContents(QStyle.ContentsType.CT_SpinBox, opt, hint, self)
 
     def stepBy(self, steps: int) -> None:
         cursor_position: int = self.lineEdit().cursorPosition()
@@ -46,7 +77,7 @@ class TimeSpanEdit(QAbstractSpinBox):
         self.timeSpanChanged.emit(self.time_delta)
 
     def stepEnabled(self) -> QAbstractSpinBox.StepEnabled:
-        if self.validate(self.text(), self.lineEdit().cursorPosition())[0] != QValidator.State.Acceptable:
+        if not self.hasAcceptableInput():
             return cast(QAbstractSpinBox.StepEnabled, QAbstractSpinBox.StepEnabledFlag.StepNone)
         if self.time_delta.total_seconds() > 0.:
             return cast(
@@ -144,19 +175,7 @@ class TimeSpanEdit(QAbstractSpinBox):
         self.blockSignals(True)
         cursor_position: int = self.lineEdit().cursorPosition()
         place: int = self.text().count(':', cursor_position)
-        days: int = delta.days
-        seconds: float = delta.seconds % 60 + 1e-6 * delta.microseconds
-        minutes: int = (delta.seconds // 60) % 60
-        hours: int = delta.seconds // 3600
-        seconds_str: str = f'{seconds:02.0f}' if abs(seconds % 1.0) < 0.001 else f'{seconds:06.3f}'
-        if days > 0:
-            self.lineEdit().setText(f'{days}:{hours:02d}:{minutes:02d}:{seconds_str}')
-        elif hours > 0:
-            self.lineEdit().setText(f'{hours:02d}:{minutes:02d}:{seconds_str}')
-        elif minutes > 0:
-            self.lineEdit().setText(f'{minutes:02d}:{seconds_str}')
-        else:
-            self.lineEdit().setText(seconds_str)
+        self.lineEdit().setText(_value_to_text(delta))
         while cursor_position > 0 and self.text().count(':', cursor_position) < place:
             cursor_position -= 1
         while cursor_position < len(self.text()) and self.text().count(':', cursor_position) > place:
@@ -174,7 +193,7 @@ class TimeSpanEdit(QAbstractSpinBox):
 
     def _on_edit_finished(self) -> None:
         # why do we call the fix-up manually??
-        if self.validate(self.text(), self.lineEdit().cursorPosition())[0] != QValidator.State.Acceptable:
+        if not self.hasAcceptableInput():
             self.fixup(self.text())
         delta_changed: bool = self.time_delta != self._last_correct_delta
         self.time_delta = self.time_delta  # not an error, we need the time to be normalized
