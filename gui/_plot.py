@@ -31,6 +31,7 @@ class Plot(QWidget):
         self.canvas.setAxisItems({'bottom': pg.DateAxisItem()})
         self.canvas.vb.setAutoVisible(x=True, y=True)
         self.canvas.vb.setMouseMode(pg.ViewBox.RectMode)
+        self.canvas.vb.setDefaultPadding(0.0)
         layout.addWidget(plot)
         cursor_balloon: pg.TextItem = pg.TextItem()
         plot.addItem(cursor_balloon, True)  # ignore bounds
@@ -152,7 +153,7 @@ class Plot(QWidget):
              colors: Iterable[QColor] = (), visibility: Iterable[bool] = ()) -> None:
         if self.lines:
             self.clear()
-        self.canvas.vb.enableAutoRange()
+
         x_column: int = data_model.header.index(x_column_name)
         y_column_name: str
         color: QColor
@@ -175,8 +176,7 @@ class Plot(QWidget):
         self.end_time.blockSignals(False)
         self.start_time.blockSignals(False)
 
-        self.canvas.vb.setAutoPan(x=True)
-        self.canvas.vb.disableAutoRange()
+        self.canvas.vb.autoRange(padding=0.0)
 
         self.start_time.setEnabled(bool(self.lines))
         self.end_time.setEnabled(bool(self.lines))
