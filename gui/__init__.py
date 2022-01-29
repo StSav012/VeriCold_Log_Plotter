@@ -34,7 +34,7 @@ def run() -> None:
     for argv in sys.argv[1:]:
         if argv.split()[0] == '-check':
             check_file_updates = True
-            argv = ' '.join(argv.split()[1:])
+            argv = argv[len('-check'):].lstrip()
         if window.load_file(QUrl(argv).path() or argv, check_file_updates=check_file_updates):
             break
     window.show()
