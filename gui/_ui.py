@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from base64 import b64encode
+
 from datetime import datetime
 from pathlib import Path
 from typing import Callable, Dict, Final, List, Optional, Union, cast
@@ -72,7 +72,7 @@ class MainWindow(QMainWindow):
         # https://ru.stackoverflow.com/a/1032610
         window_icon: QPixmap = QPixmap()
         # noinspection PyTypeChecker
-        window_icon.loadFromData(QByteArray.fromBase64(b64encode(b'''\
+        window_icon.loadFromData(b'''\
                     <svg version="1.1" viewBox="0 0 135 135" xmlns="http://www.w3.org/2000/svg">\
                     <path d="m0 0h135v135h-135v-135" fill="#282e70"/>\
                     <path d="m23 51c3.4-8.7 9.4-16 17-22s17-8.2 26-8.2c9.3 0 19 2.9 26 8.2 7.7 5.3 14 13 17 22 4.1 11 \
@@ -84,7 +84,7 @@ class MainWindow(QMainWindow):
                     4e-6-1e-5 5.5-.62 12-2.5 18-6.5 4.9-3.2 9.4-7.9 13-14 2.8-5.2 4.5-11 \
                     4.5-18v-2e-6c.003-6.4-1.7-13-4.5-18-3.1-5.8-7.7-11-13-14-5.9-4-12-5.8-18-6.5-12-1.4-20 \
                     2.3-20 1.2z" fill="#282e70"/></svg>\
-                    ''')), 'SVG')
+                    ''', 'SVG')
         self.setWindowIcon(QIcon(window_icon))
 
         self.setObjectName('main_window')
