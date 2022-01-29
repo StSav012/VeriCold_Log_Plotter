@@ -99,8 +99,6 @@ class TimeSpanEdit(QAbstractSpinBox):
 
         if not text:
             return QValidator.State.Intermediate, text, cursor_position
-        if text.endswith(':'):  # text ends with ':', the rest has not been entered yet
-            return QValidator.State.Intermediate, text, cursor_position
 
         parts: List[str] = text.split(':')
         if len(parts) <= 4 and not all(parts):
