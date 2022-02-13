@@ -22,6 +22,8 @@ PLOT_LINES_COUNT: Final[int] = 8
 
 
 class MainWindow(QMainWindow):
+    _initial_window_title: Final[str] = QApplication.translate('initial main window title', 'VeriCold Plotter')
+
     def __init__(self, application: Optional[QApplication] = None,
                  parent: Optional[QWidget] = None,
                  flags: Union[Qt.WindowFlags, Qt.WindowType] = Qt.WindowFlags()) -> None:
@@ -171,8 +173,7 @@ class MainWindow(QMainWindow):
             self.settings_layout.addWidget(cb)
         self.addDockWidget(Qt.RightDockWidgetArea, self.dock_settings)
 
-        self.setWindowTitle(self.tr('VeriCold Plotter'))
-        setattr(self, 'initial_window_title', self.windowTitle())
+        self.setWindowTitle(self._initial_window_title)
         self.menu_file.setTitle(self.tr('File'))
         self.menu_about.setTitle(self.tr('About'))
         self.action_open.setText(self.tr('Open...'))
@@ -274,6 +275,7 @@ class MainWindow(QMainWindow):
             self.status_bar.showMessage(self.tr('Ready'))
             self.file_created = Path(self._opened_file_name).lstat().st_mtime
             self.check_file_updates = check_file_updates
+            self.setWindowTitle(f'{file_name} — {self._initial_window_title}')
             return True
 
     def save_csv(self, filename: str) -> bool:
@@ -339,8 +341,7 @@ class MainWindow(QMainWindow):
             self, self.tr('Open'),
             self._opened_file_name,
             f'{self.tr("VeriCold data logfile")} (*.vcl);;{self.tr("All Files")} (*.*)')
-        if self.load_file(new_file_name):
-            self.setWindowTitle(f'{new_file_name} — {getattr(self, "initial_window_title")}')
+        self.load_file(new_file_name)
 
     def on_action_export_triggered(self) -> None:
         supported_formats: Dict[str, str] = {'.csv': f'{self.tr("Text with separators")} (*.csv)'}
