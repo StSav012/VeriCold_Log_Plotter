@@ -225,7 +225,7 @@ class Plot(QWidget):
                                                  cycle(visibility or True)):
             y_column: int = data_model.header.index(y_column_name)
             self.lines.append(self.canvas.plot(data_model[x_column], data_model[y_column], pen=color))
-            self.lines[-1].curve.opts['pen'].setCosmetic(False)
+            self.lines[-1].curve.opts['pen'].setCosmetic(True)
             self.lines[-1].setVisible(visible)
 
         self.start_time.blockSignals(True)
@@ -253,9 +253,9 @@ class Plot(QWidget):
         if color is None:
             color = self.lines[index].opts['pen']
         if isinstance(color, QPen):
-            color.setCosmetic(False)
+            color.setCosmetic(True)
         else:
-            color = pg.mkPen(color, cosmetic=False)
+            color = pg.mkPen(color, cosmetic=True)
         x_column: int = data_model.header.index(x_column_name)
         y_column: int = data_model.header.index(y_column_name)
 
