@@ -4,11 +4,12 @@ from itertools import cycle
 from typing import Any, Iterable, List, Optional, Tuple, Union
 
 import numpy as np
-import pyqtgraph as pg
+import pyqtgraph as pg  # type: ignore
 from PySide6.QtCore import Qt, QDateTime, QEvent, QPointF, QRectF, QCoreApplication
 from PySide6.QtGui import QAction, QColor, QPen
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QDateTimeEdit
-from pyqtgraph.GraphicsScene.mouseEvents import MouseClickEvent
+from numpy.typing import NDArray
+from pyqtgraph.GraphicsScene.mouseEvents import MouseClickEvent  # type: ignore
 
 __all__ = ['Plot']
 
@@ -34,11 +35,10 @@ class Plot(QWidget):
         self.canvas: pg.PlotItem = plot.getPlotItem()
 
         def auto_range_y() -> None:
-            # self.canvas.vb.enableAutoRange(pg.ViewBox.YAxis)
             if not self.lines:
                 return
             line: pg.PlotDataItem
-            visible_data: List[np.ndarray] = []
+            visible_data: List[NDArray[np.float64]] = []
             x_min: float
             x_max: float
             y_min: float
@@ -47,7 +47,7 @@ class Plot(QWidget):
             for line in self.lines:
                 if line.yData is None or not line.yData.size:
                     continue
-                visible_data_piece: np.ndarray = line.yData[(line.xData >= x_min) & (line.xData <= x_max)]
+                visible_data_piece: NDArray[np.float64] = line.yData[(line.xData >= x_min) & (line.xData <= x_max)]
                 if np.any((visible_data_piece >= y_min) & (visible_data_piece <= y_max)):
                     visible_data.append(visible_data_piece)
             if not visible_data:
@@ -221,8 +221,8 @@ class Plot(QWidget):
         color: QColor
         visible: bool
         for y_column_name, color, visible in zip(y_column_names,
-                                                 cycle(colors or pg.CONFIG_OPTIONS['foreground']),
-                                                 cycle(visibility or True)):
+                                                 cycle(colors or [pg.CONFIG_OPTIONS['foreground']]),
+                                                 cycle(visibility or [True])):
             y_column: int = data_model.header.index(y_column_name)
             self.lines.append(self.canvas.plot(data_model[x_column], data_model[y_column], pen=color))
             self.lines[-1].curve.opts['pen'].setCosmetic(True)

@@ -2,14 +2,15 @@
 
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, Dict, Final, List, Optional, Union, cast
+from typing import Callable, Dict, Final, List, Optional, cast
 
 import numpy as np
-import pyqtgraph as pg
+import pyqtgraph as pg  # type: ignore
 from PySide6.QtCore import QByteArray, QPoint, QRect, QTranslator, Qt, QTimer
-from PySide6.QtGui import QAction, QCloseEvent, QIcon, QPixmap, QScreen, QColor
+from PySide6.QtGui import QAction, QCloseEvent, QColor, QIcon, QKeySequence, QPixmap, QScreen
 from PySide6.QtWidgets import QApplication, QDockWidget, QFileDialog, QFormLayout, QGridLayout, QMainWindow, \
     QMenu, QMenuBar, QMessageBox, QStatusBar, QVBoxLayout, QWidget, QStyle
+from numpy.typing import NDArray
 
 from gui._data_model import DataModel
 from gui._plot import Plot
@@ -25,9 +26,8 @@ class MainWindow(QMainWindow):
     _initial_window_title: Final[str] = QApplication.translate('initial main window title', 'VeriCold Plotter')
 
     def __init__(self, application: Optional[QApplication] = None,
-                 parent: Optional[QWidget] = None,
-                 flags: Union[Qt.WindowFlags, Qt.WindowType] = Qt.WindowFlags()) -> None:
-        super().__init__(parent=parent, flags=flags)
+                 parent: Optional[QWidget] = None) -> None:
+        super().__init__(parent=parent)
 
         self.settings: Settings = Settings('SavSoft', 'VeriCold Plotter', self)
         self.application: Optional[QApplication] = application
@@ -143,12 +143,12 @@ class MainWindow(QMainWindow):
         self.action_auto_reload.setEnabled(False)
         self.action_auto_reload.setCheckable(True)
 
-        self.action_open.setShortcut('Ctrl+O')
-        self.action_export.setShortcuts(('Ctrl+S', 'Ctrl+E'))
-        self.action_reload.setShortcuts(('Ctrl+R', 'F5'))
-        self.action_preferences.setShortcut('Ctrl+,')
-        self.action_quit.setShortcuts(('Ctrl+Q', 'Ctrl+X'))
-        self.action_about.setShortcut('F1')
+        self.action_open.setShortcut(QKeySequence('Ctrl+O'))
+        self.action_export.setShortcuts((QKeySequence('Ctrl+S'), QKeySequence('Ctrl+E')))
+        self.action_reload.setShortcuts((QKeySequence('Ctrl+R'), QKeySequence('F5')))
+        self.action_preferences.setShortcut(QKeySequence('Ctrl+,'))
+        self.action_quit.setShortcuts((QKeySequence('Ctrl+Q'), QKeySequence('Ctrl+X')))
+        self.action_about.setShortcut(QKeySequence('F1'))
 
         self.action_open.triggered.connect(self.on_action_open_triggered)
         self.action_export.triggered.connect(self.on_action_export_triggered)
@@ -160,8 +160,7 @@ class MainWindow(QMainWindow):
         self.action_about_qt.triggered.connect(self.on_action_about_qt_triggered)
 
         self.dock_settings.setObjectName('dock_settings')
-        self.dock_settings.setAllowedAreas(Qt.AllDockWidgetAreas)
-        # self.box_settings.setLayout(self.settings_layout)
+        self.dock_settings.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
         self.dock_settings.setFeatures(cast(QDockWidget.DockWidgetFeatures,
                                             cast(int, self.dock_settings.features())
                                             & ~self.dock_settings.DockWidgetClosable))
@@ -204,8 +203,8 @@ class MainWindow(QMainWindow):
 
     def load_settings(self) -> None:
         self.settings.beginGroup('location')
-        self._opened_file_name = self.settings.value('open', str(Path.cwd()), str)
-        self._exported_file_name = self.settings.value('export', str(Path.cwd()), str)
+        self._opened_file_name = cast(str, self.settings.value('open', str(Path.cwd()), str))
+        self._exported_file_name = cast(str, self.settings.value('export', str(Path.cwd()), str))
         self.settings.endGroup()
 
         self.settings.beginGroup('window')
@@ -217,9 +216,9 @@ class MainWindow(QMainWindow):
         self.move(window_frame.topLeft())
 
         # noinspection PyTypeChecker
-        self.restoreGeometry(self.settings.value('geometry', QByteArray()))
+        self.restoreGeometry(cast(QByteArray, self.settings.value('geometry', QByteArray())))
         # noinspection PyTypeChecker
-        self.restoreState(self.settings.value('state', QByteArray()))
+        self.restoreState(cast(QByteArray, self.settings.value('state', QByteArray())))
         self.settings.endGroup()
 
     def save_settings(self) -> None:
@@ -244,7 +243,7 @@ class MainWindow(QMainWindow):
         if not file_name:
             return False
         titles: List[str]
-        data: np.ndarray
+        data: NDArray[np.float64]
         try:
             titles, data = parse(file_name)
         except (IOError, RuntimeError) as ex:
@@ -293,10 +292,10 @@ class MainWindow(QMainWindow):
 
     def save_xlsx(self, filename: str) -> bool:
         try:
-            import xlsxwriter
+            import xlsxwriter  # type: ignore
             from xlsxwriter import Workbook
-            from xlsxwriter.format import Format
-            from xlsxwriter.worksheet import Worksheet
+            from xlsxwriter.format import Format  # type: ignore
+            from xlsxwriter.worksheet import Worksheet  # type: ignore
         except ImportError as ex:
             self.status_bar.showMessage(' '.join(repr(a) for a in ex.args))
             return False
@@ -439,7 +438,7 @@ class MainWindow(QMainWindow):
             self.file_created = Path(self._opened_file_name).lstat().st_mtime
 
         titles: List[str]
-        data: np.ndarray
+        data: NDArray[np.float64]
         try:
             titles, data = parse(self._opened_file_name)
         except (IOError, RuntimeError) as ex:

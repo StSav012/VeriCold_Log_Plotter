@@ -1,7 +1,7 @@
 # coding: utf-8
 from typing import Any, Final, Optional, Sequence
 
-import pyqtgraph as pg
+import pyqtgraph as pg  # type: ignore
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QCheckBox, QComboBox, QHBoxLayout, QWidget
