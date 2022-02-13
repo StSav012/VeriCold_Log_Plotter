@@ -353,11 +353,11 @@ class MainWindow(QMainWindow):
         else:
             supported_formats['.xlsx'] = f'{self.tr("Microsoft Excel")} (*.xlsx)'
             supported_formats_callbacks['.xlsx'] = self.save_xlsx
-        initial_filter: str = ''
+        selected_filter: str = ''
         if self._exported_file_name:
             exported_file_name_ext: str = Path(self._exported_file_name).suffix
             if exported_file_name_ext in supported_formats:
-                initial_filter = supported_formats[exported_file_name_ext]
+                selected_filter = supported_formats[exported_file_name_ext]
         new_file_name: str
         new_file_name_filter: str  # BUG: it's empty when a native dialog is used
         # noinspection PyTypeChecker
@@ -366,7 +366,7 @@ class MainWindow(QMainWindow):
             str(Path(self._exported_file_name or self._opened_file_name)
                 .with_name(Path(self._opened_file_name).name)),
             filter=';;'.join(supported_formats.values()),
-            initialFilter=initial_filter,  # BUG: it is not taken into account empty when a native dialog is used
+            selectedFilter=selected_filter,
         )
         if not new_file_name:
             return
