@@ -6,7 +6,7 @@ from typing import Any, Iterable, List, Optional, Tuple, Union
 import numpy as np
 import pyqtgraph as pg  # type: ignore
 from PySide6.QtCore import Qt, QDateTime, QEvent, QPointF, QRectF, QCoreApplication
-from PySide6.QtGui import QAction, QColor, QPen
+from PySide6.QtGui import QAction, QBrush, QColor, QPalette, QPen
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QDateTimeEdit
 from numpy.typing import NDArray
 from pyqtgraph.GraphicsScene.mouseEvents import MouseClickEvent  # type: ignore
@@ -33,6 +33,21 @@ class Plot(QWidget):
         self.lines: List[pg.PlotDataItem] = []
 
         self.canvas: pg.PlotItem = plot.getPlotItem()
+        is_dark: bool = self.palette().color(QPalette.Window).lightness() < 128
+        ax: pg.AxisItem
+        label: str
+        if is_dark:
+            plot.setBackground(QBrush(pg.mkColor('k')))
+            for label, ax_d in self.canvas.axes.items():
+                ax = ax_d['item']
+                ax.setPen('d')
+                ax.setTextPen('d')
+        else:
+            plot.setBackground(QBrush(pg.mkColor('w')))
+            for label, ax_d in self.canvas.axes.items():
+                ax = ax_d['item']
+                ax.setPen('k')
+                ax.setTextPen('k')
 
         def auto_range_y() -> None:
             if not self.lines:
