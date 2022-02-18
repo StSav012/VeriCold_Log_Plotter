@@ -35,7 +35,7 @@ class DataModel:
     def set_data(self, new_data: Union[List[List[float]], NDArray[np.float64]],
                  new_header: Optional[List[str]] = None) -> None:
         self._data = np.array(new_data)
-        good: NDArray[np.bool] = ~np.all(self._data == 0.0, axis=1)
+        good: NDArray[np.bool] = np.full(self._data.shape[0], True)
         if new_header is not None and 'LineNumber' in new_header:
             good[new_header.index('LineNumber')] = False
         self._data = self._data[good]
