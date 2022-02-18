@@ -12,9 +12,6 @@ try:
     from numpy.typing import NDArray
 
     def parse(filename: Union[str, Path, BinaryIO]) -> Tuple[List[str], NDArray[np.float64]]:
-        if np is None:
-            raise ImportError('Module `numpy` is not loaded')
-
         def _parse(file_handle: BinaryIO) -> Tuple[List[str], NDArray[np.float64]]:
             file_handle.seek(0x1800 + 32)
             titles: List[str] = [file_handle.read(32).strip(b'\0').decode('ascii')
