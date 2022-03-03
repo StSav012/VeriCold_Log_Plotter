@@ -6,7 +6,7 @@ from typing import Any, Iterable, List, Optional, Tuple, Union
 import numpy as np
 import pyqtgraph as pg  # type: ignore
 from PySide6.QtCore import Qt, QDateTime, QEvent, QPointF, QRectF, QCoreApplication
-from PySide6.QtGui import QAction, QBrush, QColor, QPalette, QPen
+from PySide6.QtGui import QAction, QColor, QPalette, QPen
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QDateTimeEdit
 from numpy.typing import NDArray
 from pyqtgraph.GraphicsScene.mouseEvents import MouseClickEvent  # type: ignore
@@ -32,22 +32,27 @@ class Plot(QWidget):
         plot: pg.PlotWidget = pg.PlotWidget(self)
         self.lines: List[pg.PlotDataItem] = []
 
+        cursor_balloon: pg.TextItem = pg.TextItem()
+        plot.addItem(cursor_balloon, True)  # ignore bounds
+
         self.canvas: pg.PlotItem = plot.getPlotItem()
+        self.canvas.setAxisItems({'bottom': pg.DateAxisItem()})
         is_dark: bool = self.palette().color(QPalette.Window).lightness() < 128
-        ax: pg.AxisItem
-        label: str
+
+        def set_colors(background_color: str, foreground_color: str) -> None:
+            ax: pg.AxisItem
+            label: str
+            plot.setBackground(pg.mkBrush(background_color))
+            for label, ax_d in self.canvas.axes.items():
+                ax = ax_d['item']
+                ax.setPen(foreground_color)
+                ax.setTextPen(foreground_color)
+            cursor_balloon.setColor(foreground_color)
+
         if is_dark:
-            plot.setBackground(QBrush(pg.mkColor('k')))
-            for label, ax_d in self.canvas.axes.items():
-                ax = ax_d['item']
-                ax.setPen('d')
-                ax.setTextPen('d')
+            set_colors('k', 'd')
         else:
-            plot.setBackground(QBrush(pg.mkColor('w')))
-            for label, ax_d in self.canvas.axes.items():
-                ax = ax_d['item']
-                ax.setPen('k')
-                ax.setTextPen('k')
+            set_colors('w', 'k')
 
         def auto_range_y() -> None:
             if not self.lines:
@@ -82,7 +87,6 @@ class Plot(QWidget):
 
         self.canvas.autoBtn.clicked.disconnect(self.canvas.autoBtnClicked)
         self.canvas.autoBtn.clicked.connect(auto_range_y)
-        self.canvas.setAxisItems({'bottom': pg.DateAxisItem()})
 
         menu_action: QAction
         for menu_action in self.canvas.ctrlMenu.actions():
@@ -105,9 +109,6 @@ class Plot(QWidget):
         self.canvas.vb.menu.ctrl[1].mouseCheck.hide()
         self.canvas.vb.menu.viewAll.triggered.connect(on_view_all_triggered)
         layout.addWidget(plot)
-
-        cursor_balloon: pg.TextItem = pg.TextItem()
-        plot.addItem(cursor_balloon, True)  # ignore bounds
 
         x_range_layout: QHBoxLayout = QHBoxLayout()
         layout.addLayout(x_range_layout)
