@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime, timedelta
 from itertools import cycle
-from typing import Any, Iterable, List, Optional, Tuple, Union
+from typing import Any, Iterable, List, Optional, Tuple, Union, cast
 
 import numpy as np
 import pyqtgraph as pg  # type: ignore
@@ -255,8 +255,10 @@ class Plot(QWidget):
         self.start_time.blockSignals(False)
 
         line: pg.PlotDataItem
-        min_y: float = min(np.min(line.yData) for line in self.lines if line.yData is not None and line.yData.size)
-        max_y: float = max(np.max(line.yData) for line in self.lines if line.yData is not None and line.yData.size)
+        min_y: float = min(cast(float, np.nanmin(line.yData))
+                           for line in self.lines if line.yData is not None and line.yData.size)
+        max_y: float = max(cast(float, np.nanmax(line.yData))
+                           for line in self.lines if line.yData is not None and line.yData.size)
         self.canvas.vb.setYRange(min_y, max_y, padding=0.0)
         self.canvas.vb.setXRange(data_model[x_column][0], data_model[x_column][-1], padding=0.0)
 

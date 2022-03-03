@@ -41,3 +41,8 @@ class DataModel:
         self._data = self._data[good]
         if new_header is not None:
             self._header = [str(s) for s, g in zip(new_header, good) if g]
+            i: int
+            c: str
+            for i, c in enumerate(self._header):
+                if c.endswith('(K)'):  # temperature values must be positive
+                    self._data[self._data <= 0.0] = np.nan
