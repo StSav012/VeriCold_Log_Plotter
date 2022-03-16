@@ -35,6 +35,17 @@ class MainWindow(QMainWindow):
 
         self.central_widget: QWidget = QWidget(self)
         self.main_layout: QGridLayout = QGridLayout(self.central_widget)
+
+        self.dock_settings: QDockWidget = QDockWidget(self)
+        self.box_settings: QWidget = QWidget(self.dock_settings)
+        self.settings_layout: QVBoxLayout = QVBoxLayout(self.box_settings)
+        self.layout_x_axis: QFormLayout = QFormLayout()
+        self.combo_x_axis: pg.ComboBox = pg.ComboBox(self.box_settings)
+        self.combo_y_axis: List[PlotLineOptions] = [PlotLineOptions(items=[],
+                                                                    settings=self.settings,
+                                                                    parent=self.dock_settings)
+                                                    for _ in range(PLOT_LINES_COUNT)]
+
         self.data_model: DataModel = DataModel()
         self.plot: Plot = Plot(self)
 
@@ -51,16 +62,6 @@ class MainWindow(QMainWindow):
         self.action_about_qt: QAction = QAction(self)
 
         self.status_bar: QStatusBar = QStatusBar(self)
-
-        self.dock_settings: QDockWidget = QDockWidget(self)
-        self.box_settings: QWidget = QWidget(self.dock_settings)
-        self.settings_layout: QVBoxLayout = QVBoxLayout(self.box_settings)
-        self.layout_x_axis: QFormLayout = QFormLayout()
-        self.combo_x_axis: pg.ComboBox = pg.ComboBox(self.box_settings)
-        self.combo_y_axis: List[PlotLineOptions] = [PlotLineOptions(items=[],
-                                                                    settings=self.settings,
-                                                                    parent=self.dock_settings)
-                                                    for _ in range(PLOT_LINES_COUNT)]
 
         self._opened_file_name: str = ''
         self._exported_file_name: str = ''
