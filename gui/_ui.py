@@ -2,14 +2,15 @@
 
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, Dict, Final, List, Optional, cast
+from types import GeneratorType
+from typing import Callable, Dict, Final, Iterable, List, Optional, Sequence, Union, cast
 
 import numpy as np
 import pyqtgraph as pg  # type: ignore
-from PySide6.QtCore import QByteArray, QPoint, QRect, QTranslator, Qt, QTimer
+from PySide6.QtCore import QByteArray, QPoint, QRect, QTimer, QTranslator, Qt
 from PySide6.QtGui import QAction, QCloseEvent, QColor, QIcon, QKeySequence, QPixmap, QScreen
-from PySide6.QtWidgets import QApplication, QDockWidget, QFileDialog, QFormLayout, QGridLayout, QMainWindow, \
-    QMenu, QMenuBar, QMessageBox, QStatusBar, QVBoxLayout, QWidget, QStyle
+from PySide6.QtWidgets import QApplication, QDockWidget, QFileDialog, QFormLayout, QGridLayout, QMainWindow, QMenu, \
+    QMenuBar, QMessageBox, QStatusBar, QStyle, QVBoxLayout, QWidget
 from numpy.typing import NDArray
 
 from gui._data_model import DataModel
@@ -240,43 +241,65 @@ class MainWindow(QMainWindow):
             translator.load(str(self.settings.translation_path))
             self.application.installTranslator(translator)
 
-    def load_file(self, file_name: str, check_file_updates: bool = False) -> bool:
+    def load_file(self, file_name: Union[str, Iterable[str], GeneratorType],
+                  check_file_updates: bool = False) -> bool:
         if not file_name:
             return False
         titles: List[str]
         data: NDArray[np.float64]
-        try:
-            titles, data = parse(file_name)
-        except (IOError, RuntimeError) as ex:
-            self.status_bar.showMessage(' '.join(repr(a) for a in ex.args))
-            return False
+        if isinstance(file_name, (set, Sequence[str], GeneratorType)):
+            all_titles: List[List[str]] = []
+            all_data: List[NDArray[np.float64]] = []
+            _file_names: Union[Iterable[str], GeneratorType] = file_name
+            for file_name in _file_names:
+                try:
+                    titles, data = parse(file_name)
+                except (IOError, RuntimeError) as ex:
+                    self.status_bar.showMessage(' '.join(repr(a) for a in ex.args))
+                    continue
+                else:
+                    all_titles.append(titles)
+                    all_data.append(data)
+            if not all_titles or not all_data:
+                return False
+            # use only the files with identical columns
+            titles = all_titles[-1]
+            i: int = len(all_titles) - 2
+            while i >= 0 and all_titles[i] == titles:
+                i -= 1
+            data = np.column_stack(all_data[i + 1:])
         else:
-            self._opened_file_name = file_name
-            self.data_model.set_data(data, titles)
+            try:
+                titles, data = parse(file_name)
+            except (IOError, RuntimeError) as ex:
+                self.status_bar.showMessage(' '.join(repr(a) for a in ex.args))
+                return False
+        self._opened_file_name = file_name
+        self.data_model.set_data(data, titles)
 
-            self.combo_x_axis.blockSignals(True)
-            self.combo_x_axis.setItems(tuple(filter(lambda t: t.endswith('(secs)') or t.endswith('(s)'),
-                                                    self.data_model.header)))
-            self.combo_x_axis.setCurrentText(self.settings.argument)
-            self.combo_x_axis.blockSignals(False)
+        self.combo_x_axis.blockSignals(True)
+        self.combo_x_axis.setItems(tuple(filter(lambda t: t.endswith('(secs)') or t.endswith('(s)'),
+                                                self.data_model.header)))
+        self.combo_x_axis.setCurrentText(self.settings.argument)
+        self.combo_x_axis.blockSignals(False)
 
-            cb: PlotLineOptions
-            for cb in self.combo_y_axis:
-                cb.set_items(tuple(filter(lambda t: not (t.endswith('(secs)') or t.endswith('(s)')),
-                                          self.data_model.header)))
-            self.plot.plot(self.data_model,
-                           self.combo_x_axis.value(),
-                           (cb.option for cb in self.combo_y_axis),
-                           colors=(cb.color for cb in self.combo_y_axis),
-                           visibility=(cb.checked for cb in self.combo_y_axis))
-            self.action_export.setEnabled(True)
-            self.action_reload.setEnabled(True)
-            self.action_auto_reload.setEnabled(True)
-            self.status_bar.showMessage(self.tr('Ready'))
-            self.file_created = Path(self._opened_file_name).lstat().st_mtime
-            self.check_file_updates = check_file_updates
-            self.setWindowTitle(f'{file_name} — {self._initial_window_title}')
-            return True
+        cb: PlotLineOptions
+        for cb in self.combo_y_axis:
+            cb.set_items(tuple(filter(lambda t: not (t.endswith('(secs)') or t.endswith('(s)')),
+                                      self.data_model.header)))
+        self.plot.plot(self.data_model,
+                       self.combo_x_axis.value(),
+                       (cb.option for cb in self.combo_y_axis),
+                       colors=(cb.color for cb in self.combo_y_axis),
+                       visibility=(cb.checked for cb in self.combo_y_axis))
+        self.action_export.setEnabled(True)
+        self.action_reload.setEnabled(True)
+        self.action_auto_reload.setEnabled(True)
+        self.status_bar.showMessage(self.tr('Ready'))
+        self.file_created = Path(self._opened_file_name).lstat().st_mtime
+        self.check_file_updates = check_file_updates
+        self.setWindowTitle(f'{file_name} — {self._initial_window_title}')
+        return True
 
     def save_csv(self, filename: str) -> bool:
         try:

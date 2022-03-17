@@ -227,22 +227,32 @@ class Plot(QWidget):
     def clear(self) -> None:
         self.canvas.clearPlots()
 
-    def plot(self, data_model: DataModel, x_column_name: str, y_column_names: Iterable[str], *,
+    def plot(self, data_model: DataModel, x_column_name: Optional[str], y_column_names: Iterable[Optional[str]], *,
              colors: Iterable[QColor] = (), visibility: Iterable[bool] = ()) -> None:
         if self.lines:
             self.clear()
 
-        x_column: int = data_model.header.index(x_column_name)
         y_column_name: str
         color: QColor
         visible: bool
-        for y_column_name, color, visible in zip(y_column_names,
-                                                 cycle(colors or [pg.CONFIG_OPTIONS['foreground']]),
-                                                 cycle(visibility or [True])):
-            y_column: int = data_model.header.index(y_column_name)
-            self.lines.append(self.canvas.plot(data_model[x_column], data_model[y_column], pen=color))
-            self.lines[-1].curve.opts['pen'].setCosmetic(True)
-            self.lines[-1].setVisible(visible)
+        y_column_names = tuple(y_column_names)
+        if x_column_name is not None and all(y_column_names):
+            x_column: int = data_model.header.index(x_column_name)
+            for y_column_name, color, visible in zip(y_column_names,
+                                                     cycle(colors or [pg.CONFIG_OPTIONS['foreground']]),
+                                                     cycle(visibility or [True])):
+                y_column: int = data_model.header.index(y_column_name)
+                self.lines.append(self.canvas.plot(data_model[x_column], data_model[y_column], pen=color))
+                self.lines[-1].curve.opts['pen'].setCosmetic(True)
+                self.lines[-1].setVisible(visible)
+            self.canvas.vb.setXRange(data_model[x_column][0], data_model[x_column][-1], padding=0.0)
+        else:
+            for y_column_name, color, visible in zip(y_column_names,
+                                                     cycle(colors or [pg.CONFIG_OPTIONS['foreground']]),
+                                                     cycle(visibility or [True])):
+                self.lines.append(self.canvas.plot([], [], pen=color))
+                self.lines[-1].curve.opts['pen'].setCosmetic(True)
+                self.lines[-1].setVisible(visible)
 
         self.start_time.blockSignals(True)
         self.end_time.blockSignals(True)
@@ -255,19 +265,24 @@ class Plot(QWidget):
         self.start_time.blockSignals(False)
 
         line: pg.PlotDataItem
-        min_y: float = min(cast(float, np.nanmin(line.yData))
-                           for line in self.lines if line.yData is not None and line.yData.size)
-        max_y: float = max(cast(float, np.nanmax(line.yData))
-                           for line in self.lines if line.yData is not None and line.yData.size)
-        self.canvas.vb.setYRange(min_y, max_y, padding=0.0)
-        self.canvas.vb.setXRange(data_model[x_column][0], data_model[x_column][-1], padding=0.0)
+        good_lines: List[pg.PlotDataItem] = [line for line in self.lines
+                                             if (line.yData is not None
+                                                 and line.yData.size
+                                                 and not np.all(np.isnan(line.yData)))]
+        if good_lines:
+            min_y: float = min(cast(float, np.nanmin(line.yData)) for line in good_lines)
+            max_y: float = max(cast(float, np.nanmax(line.yData)) for line in good_lines)
+            self.canvas.vb.setYRange(min_y, max_y, padding=0.0)
 
-        self.start_time.setEnabled(bool(self.lines))
-        self.end_time.setEnabled(bool(self.lines))
-        self.time_span.setEnabled(bool(self.lines))
+        self.start_time.setEnabled(bool(good_lines))
+        self.end_time.setEnabled(bool(good_lines))
+        self.time_span.setEnabled(bool(good_lines))
 
-    def replot(self, index: int, data_model: DataModel, x_column_name: str, y_column_name: str, *,
+    def replot(self, index: int, data_model: DataModel, x_column_name: Optional[str], y_column_name: Optional[str], *,
                color: Optional[Union[QColor, QPen]] = None, roll: bool = False) -> None:
+        if x_column_name is None or y_column_name is None:
+            return
+
         if color is None:
             color = self.lines[index].opts['pen']
         if isinstance(color, QPen):
