@@ -406,7 +406,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def on_action_open_triggered(self) -> None:
         new_file_name: str
-        new_file_name, _ = QtWidgets.QFileDialog.getOpenFileName(
+        new_file_name, _ = pg.FileDialog.getOpenFileName(
             self, self.tr('Open'),
             self._opened_file_name,
             f'{self.tr("VeriCold data logfile")} (*.vcl);;{self.tr("All Files")} (*.*)')
@@ -430,7 +430,7 @@ class MainWindow(QtWidgets.QMainWindow):
         new_file_name: str
         new_file_name_filter: str  # BUG: it's empty when a native dialog is used
         # noinspection PyTypeChecker
-        new_file_name, new_file_name_filter = QtWidgets.QFileDialog.getSaveFileName(
+        new_file_name, new_file_name_filter = pg.FileDialog.getSaveFileName(
             self, self.tr('Export'),
             str(Path(self._exported_file_name or self._opened_file_name)
                 .with_name(Path(self._opened_file_name).name)),

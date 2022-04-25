@@ -50,7 +50,7 @@ class OpenFilePathEntry(QtWidgets.QWidget):
 
     def on_browse_button_clicked(self) -> None:
         new_file_name: str
-        new_file_name, _ = QtWidgets.QFileDialog.getOpenFileName(
+        new_file_name, _ = pg.FileDialog.getOpenFileName(
             self, self.tr('Open'),
             str(self._path or ''),
             self.tr('Translations') + ' (*.qm)')
