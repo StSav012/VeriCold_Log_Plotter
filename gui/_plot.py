@@ -304,3 +304,7 @@ class Plot(QtWidgets.QWidget):
 
     def set_line_visible(self, index: int, visible: bool) -> None:
         self.lines[index].setVisible(visible)
+
+    @property
+    def view_range(self) -> List[List[float]]:
+        return self.canvas.vb.viewRange()

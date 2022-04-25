@@ -3,7 +3,7 @@
 from datetime import datetime
 from pathlib import Path
 from types import GeneratorType
-from typing import Callable, Dict, Final, Iterable, List, Optional, Sequence, Union, cast
+from typing import Callable, Dict, Final, Iterable, List, Optional, Sequence, Tuple, Union, cast
 
 import numpy as np
 import pyqtgraph as pg  # type: ignore
@@ -48,11 +48,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.data_model: DataModel = DataModel()
         self.plot: Plot = Plot(self)
 
+        self.export_all: bool = True
         self.menu_bar: QtWidgets.QMenuBar = QtWidgets.QMenuBar(self)
         self.menu_file: QtWidgets.QMenu = QtWidgets.QMenu(self.menu_bar)
         self.menu_about: QtWidgets.QMenu = QtWidgets.QMenu(self.menu_bar)
         self.action_open: QtGui.QAction = QtGui.QAction(self)
         self.action_export: QtGui.QAction = QtGui.QAction(self)
+        self.action_export_visible: QtGui.QAction = QtGui.QAction(self)
         self.action_reload: QtGui.QAction = QtGui.QAction(self)
         self.action_auto_reload: QtGui.QAction = QtGui.QAction(self)
         self.action_preferences: QtGui.QAction = QtGui.QAction(self)
@@ -108,6 +110,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.action_open.setObjectName('action_open')
         self.action_export.setIcon(QtGui.QIcon.fromTheme('document-save-as'))
         self.action_export.setObjectName('action_export')
+        self.action_export_visible.setIcon(QtGui.QIcon.fromTheme('document-save-as'))
+        self.action_export_visible.setObjectName('action_export_visible')
         self.action_reload.setIcon(
             QtGui.QIcon.fromTheme('view-refresh',
                                   self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_BrowserReload)))
@@ -132,6 +136,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.action_about_qt.setObjectName('action_about_qt')
         self.menu_file.addAction(self.action_open)
         self.menu_file.addAction(self.action_export)
+        self.menu_file.addAction(self.action_export_visible)
         self.menu_file.addAction(self.action_reload)
         self.menu_file.addAction(self.action_auto_reload)
         self.menu_file.addSeparator()
@@ -144,12 +149,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.menu_bar.addAction(self.menu_about.menuAction())
 
         self.action_export.setEnabled(False)
+        self.action_export_visible.setEnabled(False)
         self.action_reload.setEnabled(False)
         self.action_auto_reload.setEnabled(False)
         self.action_auto_reload.setCheckable(True)
 
         self.action_open.setShortcut(QtGui.QKeySequence('Ctrl+O'))
         self.action_export.setShortcuts((QtGui.QKeySequence('Ctrl+S'), QtGui.QKeySequence('Ctrl+E')))
+        self.action_export_visible.setShortcuts((QtGui.QKeySequence('Shift+Ctrl+S'),
+                                                 QtGui.QKeySequence('Shift+Ctrl+E')))
         self.action_reload.setShortcuts((QtGui.QKeySequence('Ctrl+R'), QtGui.QKeySequence('F5')))
         self.action_preferences.setShortcut(QtGui.QKeySequence('Ctrl+,'))
         self.action_quit.setShortcuts((QtGui.QKeySequence('Ctrl+Q'), QtGui.QKeySequence('Ctrl+X')))
@@ -157,6 +165,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.action_open.triggered.connect(self.on_action_open_triggered)
         self.action_export.triggered.connect(self.on_action_export_triggered)
+        self.action_export_visible.triggered.connect(self.on_action_export_visible_triggered)
         self.action_reload.triggered.connect(self.on_action_reload_triggered)
         self.action_auto_reload.toggled.connect(self.on_action_auto_reload_toggled)
         self.action_preferences.triggered.connect(self.on_action_preferences_triggered)
@@ -182,6 +191,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.menu_about.setTitle(self.tr('About'))
         self.action_open.setText(self.tr('Open...'))
         self.action_export.setText(self.tr('Export...'))
+        self.action_export_visible.setText(self.tr('Export Visible...'))
         self.action_reload.setText(self.tr('Reload'))
         self.action_auto_reload.setText(self.tr('Auto Reload'))
         self.action_preferences.setText(self.tr('Preferences...'))
@@ -296,6 +306,7 @@ class MainWindow(QtWidgets.QMainWindow):
                        colors=(cb.color for cb in self.combo_y_axis),
                        visibility=(cb.checked for cb in self.combo_y_axis))
         self.action_export.setEnabled(True)
+        self.action_export_visible.setEnabled(True)
         self.action_reload.setEnabled(True)
         self.action_auto_reload.setEnabled(True)
         self.status_bar.showMessage(self.tr('Ready'))
@@ -304,11 +315,37 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle(f'{file_name} — {self._initial_window_title}')
         return True
 
+    def visible_data(self) -> Tuple[NDArray[np.float64], List[str]]:
+        o: PlotLineOptions
+        header = [self.data_model.header[0]] + [o.option for o in self.combo_y_axis]
+        h: str
+        data = self.data_model.data[[self.data_model.header.index(h) for h in header]]
+
+        # crop the visible rectangle
+        x_min: float
+        x_max: float
+        y_min: float
+        y_max: float
+        ((x_min, x_max), (y_min, y_max)) = self.plot.view_range
+        data = data[..., ((data[0] >= x_min) & (data[0] <= x_max))]
+        d: NDArray[np.float64]
+        somehow_visible_lines: List[bool] = [True] + [np.any((d >= y_min) & (d <= y_max)) for d in data[1:]]
+        data = data[somehow_visible_lines]
+        b: bool
+        header = [h for h, b in zip(header, somehow_visible_lines) if b]
+        return data, header
+
     def save_csv(self, filename: str) -> bool:
+        data: NDArray[np.float64] = self.data_model.data
+        header: List[str]
+        if self.export_all:
+            header = self.data_model.header
+        else:
+            data, header = self.visible_data()
         try:
-            np.savetxt(filename, self.data_model.data.T, fmt='%s',
+            np.savetxt(filename, data.T, fmt='%s',
                        delimiter=self.settings.csv_separator, newline=self.settings.line_end,
-                       header=self.settings.csv_separator.join(self.data_model.header))
+                       header=self.settings.csv_separator.join(header))
         except IOError as ex:
             self.status_bar.showMessage(' '.join(ex.args))
             return False
@@ -327,6 +364,12 @@ class MainWindow(QtWidgets.QMainWindow):
             self.status_bar.showMessage(' '.join(repr(a) for a in ex.args))
             return False
 
+        data: NDArray[np.float64] = self.data_model.data
+        header: List[str]
+        if self.export_all:
+            header = self.data_model.header
+        else:
+            data, header = self.visible_data()
         try:
             workbook: Workbook = Workbook(filename,
                                           {'default_date_format': 'dd.mm.yyyy hh:mm:ss',
@@ -336,14 +379,14 @@ class MainWindow(QtWidgets.QMainWindow):
             worksheet.freeze_panes(1, 0)  # freeze first row
             col: int
             row: int
-            for col in range(self.data_model.column_count):
-                worksheet.write_string(0, col, self.data_model.header[col], header_format)
-                if self.data_model.header[col].endswith(('(s)', '(secs)')):
-                    for row in range(self.data_model.row_count):
-                        worksheet.write_datetime(row + 1, col, datetime.fromtimestamp(self.data_model.item(row, col)))
+            for col in range(data.shape[0]):
+                worksheet.write_string(0, col, header[col], header_format)
+                if header[col].endswith(('(s)', '(secs)')):
+                    for row in range(data.shape[1]):
+                        worksheet.write_datetime(row + 1, col, datetime.fromtimestamp(data[col, row]))
                 else:
-                    for row in range(self.data_model.row_count):
-                        worksheet.write_number(row + 1, col, self.data_model.item(row, col))
+                    for row in range(data.shape[1]):
+                        worksheet.write_number(row + 1, col, data[col, row])
             workbook.close()
         except IOError as ex:
             self.status_bar.showMessage(' '.join(ex.args))
@@ -369,7 +412,7 @@ class MainWindow(QtWidgets.QMainWindow):
             f'{self.tr("VeriCold data logfile")} (*.vcl);;{self.tr("All Files")} (*.*)')
         self.load_file(new_file_name)
 
-    def on_action_export_triggered(self) -> None:
+    def export(self) -> None:
         supported_formats: Dict[str, str] = {'.csv': f'{self.tr("Text with separators")} (*.csv)'}
         supported_formats_callbacks: Dict[str, Callable[[str], bool]] = {'.csv': self.save_csv}
         try:
@@ -399,6 +442,14 @@ class MainWindow(QtWidgets.QMainWindow):
         new_file_name_ext: str = Path(new_file_name).suffix
         if new_file_name_ext in supported_formats_callbacks:
             supported_formats_callbacks[new_file_name_ext](new_file_name)
+
+    def on_action_export_triggered(self) -> None:
+        self.export_all = True
+        self.export()
+
+    def on_action_export_visible_triggered(self) -> None:
+        self.export_all = False
+        self.export()
 
     def on_action_reload_triggered(self) -> None:
         self.load_file(self._opened_file_name)
