@@ -5,11 +5,9 @@ from typing import Any, Iterable, List, Optional, Tuple, Union, cast
 
 import numpy as np
 import pyqtgraph as pg  # type: ignore
-from PySide6.QtCore import Qt, QDateTime, QEvent, QPointF, QRectF, QCoreApplication
-from PySide6.QtGui import QAction, QColor, QPalette, QPen
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QDateTimeEdit
 from numpy.typing import NDArray
 from pyqtgraph.GraphicsScene.mouseEvents import MouseClickEvent  # type: ignore
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 __all__ = ['Plot']
 
@@ -17,8 +15,8 @@ from gui._data_model import DataModel
 from gui._time_span_edit import TimeSpanEdit
 
 
-class Plot(QWidget):
-    def __init__(self, parent: Optional[QWidget] = None, *args: Any) -> None:
+class Plot(QtWidgets.QWidget):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None, *args: Any) -> None:
         super().__init__(parent, *args)
 
         self.setObjectName('plot_widget')
@@ -27,7 +25,7 @@ class Plot(QWidget):
         if parent is not None:
             self.setWindowIcon(parent.windowIcon())
 
-        layout: QVBoxLayout = QVBoxLayout(self)
+        layout: QtWidgets.QVBoxLayout = QtWidgets.QVBoxLayout(self)
 
         plot: pg.PlotWidget = pg.PlotWidget(self)
         self.lines: List[pg.PlotDataItem] = []
@@ -37,7 +35,7 @@ class Plot(QWidget):
 
         self.canvas: pg.PlotItem = plot.getPlotItem()
         self.canvas.setAxisItems({'bottom': pg.DateAxisItem()})
-        is_dark: bool = self.palette().color(QPalette.Window).lightness() < 128
+        is_dark: bool = self.palette().color(QtGui.QPalette.Window).lightness() < 128
 
         def set_colors(background_color: str, foreground_color: str) -> None:
             ax: pg.AxisItem
@@ -88,10 +86,10 @@ class Plot(QWidget):
         self.canvas.autoBtn.clicked.disconnect(self.canvas.autoBtnClicked)
         self.canvas.autoBtn.clicked.connect(auto_range_y)
 
-        menu_action: QAction
+        menu_action: QtGui.QAction
         for menu_action in self.canvas.ctrlMenu.actions():
             if menu_action.text() in [
-                QCoreApplication.translate('PlotItem', 'Grid'),
+                QtCore.QCoreApplication.translate('PlotItem', 'Grid'),
             ]:
                 self.canvas.vb.menu.addAction(menu_action)
             else:
@@ -110,32 +108,32 @@ class Plot(QWidget):
         self.canvas.vb.menu.viewAll.triggered.connect(on_view_all_triggered)
         layout.addWidget(plot)
 
-        x_range_layout: QHBoxLayout = QHBoxLayout()
+        x_range_layout: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout()
         layout.addLayout(x_range_layout)
         layout.setStretch(1, 0)
 
-        self.start_time: QDateTimeEdit = QDateTimeEdit(self)
-        self.end_time: QDateTimeEdit = QDateTimeEdit(self)
+        self.start_time: QtWidgets.QDateTimeEdit = QtWidgets.QDateTimeEdit(self)
+        self.end_time: QtWidgets.QDateTimeEdit = QtWidgets.QDateTimeEdit(self)
         self.time_span: TimeSpanEdit = TimeSpanEdit(self)
         self.start_time.setDisabled(True)
         self.end_time.setDisabled(True)
         self.time_span.setDisabled(True)
-        x_range_layout.addWidget(self.start_time, 0, Qt.AlignmentFlag.AlignLeft)
-        x_range_layout.addWidget(self.time_span, 0, Qt.AlignmentFlag.AlignHCenter)
-        x_range_layout.addWidget(self.end_time, 0, Qt.AlignmentFlag.AlignRight)
+        x_range_layout.addWidget(self.start_time, 0, QtCore.Qt.AlignmentFlag.AlignLeft)
+        x_range_layout.addWidget(self.time_span, 0, QtCore.Qt.AlignmentFlag.AlignHCenter)
+        x_range_layout.addWidget(self.end_time, 0, QtCore.Qt.AlignmentFlag.AlignRight)
         self.start_time.clearMinimumDateTime()
         self.start_time.clearMaximumDateTime()
         self.end_time.clearMinimumDateTime()
         self.end_time.clearMaximumDateTime()
 
-        def on_mouse_moved(event: Tuple[QPointF]) -> None:
-            pos: QPointF = event[0]
+        def on_mouse_moved(event: Tuple[QtCore.QPointF]) -> None:
+            pos: QtCore.QPointF = event[0]
             if plot.sceneBoundingRect().contains(pos):
-                point: QPointF = self.canvas.vb.mapSceneToView(pos)
+                point: QtCore.QPointF = self.canvas.vb.mapSceneToView(pos)
                 if plot.visibleRange().contains(point):
                     cursor_balloon.setPos(point)
                     cursor_balloon.setText(f'{datetime.fromtimestamp(round(point.x()))}\n{point.y()}')
-                    balloon_border: QRectF = cursor_balloon.boundingRect()
+                    balloon_border: QtCore.QRectF = cursor_balloon.boundingRect()
                     sx: float
                     sy: float
                     sx, sy = self.canvas.vb.viewPixelSize()
@@ -158,14 +156,14 @@ class Plot(QWidget):
             self.start_time.blockSignals(True)
             self.end_time.blockSignals(True)
             self.time_span.blockSignals(True)
-            self.start_time.setDateTime(QDateTime.fromMSecsSinceEpoch(round(min(x_lim) * 1000)))
-            self.end_time.setDateTime(QDateTime.fromMSecsSinceEpoch(round(max(x_lim) * 1000)))
+            self.start_time.setDateTime(QtCore.QDateTime.fromMSecsSinceEpoch(round(min(x_lim) * 1000)))
+            self.end_time.setDateTime(QtCore.QDateTime.fromMSecsSinceEpoch(round(max(x_lim) * 1000)))
             self.time_span.from_two_q_date_time(self.start_time.dateTime(), self.end_time.dateTime())
             self.time_span.blockSignals(False)
             self.end_time.blockSignals(False)
             self.start_time.blockSignals(False)
 
-        def on_plot_left(event: QEvent) -> None:
+        def on_plot_left(event: QtCore.QEvent) -> None:
             self._mouse_moved_signal_proxy.flush()
             cursor_balloon.setVisible(False)
             event.accept()
@@ -183,7 +181,7 @@ class Plot(QWidget):
         plot.leaveEvent = on_plot_left
         plot.scene().sigMouseClicked.connect(on_mouse_clicked)
 
-        def on_start_time_changed(new_time: QDateTime) -> None:
+        def on_start_time_changed(new_time: QtCore.QDateTime) -> None:
             self.time_span.blockSignals(True)
             self.time_span.from_two_q_date_time(new_time, self.end_time.dateTime())
             self.time_span.blockSignals(False)
@@ -191,7 +189,7 @@ class Plot(QWidget):
                                      self.end_time.dateTime().toPython().timestamp(),
                                      padding=0.0)
 
-        def on_end_time_changed(new_time: QDateTime) -> None:
+        def on_end_time_changed(new_time: QtCore.QDateTime) -> None:
             self.start_time.blockSignals(True)
             if new_time.addMSecs(-round(self.time_span.total_seconds * 1000)) >= self.start_time.minimumDateTime():
                 self.start_time.setDateTime(new_time.addMSecs(-round(self.time_span.total_seconds * 1000)))
@@ -228,12 +226,12 @@ class Plot(QWidget):
         self.canvas.clearPlots()
 
     def plot(self, data_model: DataModel, x_column_name: Optional[str], y_column_names: Iterable[Optional[str]], *,
-             colors: Iterable[QColor] = (), visibility: Iterable[bool] = ()) -> None:
+             colors: Iterable[QtGui.QColor] = (), visibility: Iterable[bool] = ()) -> None:
         if self.lines:
             self.clear()
 
         y_column_name: str
-        color: QColor
+        color: QtGui.QColor
         visible: bool
         y_column_names = tuple(y_column_names)
         if x_column_name is not None and all(y_column_names):
@@ -279,13 +277,13 @@ class Plot(QWidget):
         self.time_span.setEnabled(bool(good_lines))
 
     def replot(self, index: int, data_model: DataModel, x_column_name: Optional[str], y_column_name: Optional[str], *,
-               color: Optional[Union[QColor, QPen]] = None, roll: bool = False) -> None:
+               color: Optional[Union[QtGui.QColor, QtGui.QPen]] = None, roll: bool = False) -> None:
         if x_column_name is None or y_column_name is None:
             return
 
         if color is None:
             color = self.lines[index].opts['pen']
-        if isinstance(color, QPen):
+        if isinstance(color, QtGui.QPen):
             color.setCosmetic(True)
         else:
             color = pg.mkPen(color, cosmetic=True)

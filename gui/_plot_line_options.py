@@ -2,34 +2,33 @@
 from typing import Any, Final, Optional, Sequence
 
 import pyqtgraph as pg  # type: ignore
-from PySide6.QtCore import Signal
-from PySide6.QtGui import QColor
-from PySide6.QtWidgets import QCheckBox, QComboBox, QHBoxLayout, QWidget
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 from gui._settings import Settings
 
 __all__ = ['PlotLineOptions']
 
 
-class PlotLineOptions(QWidget):
+class PlotLineOptions(QtWidgets.QWidget):
     _count: int = 0
 
-    DEFAULT_COLOR: Final[QColor] = pg.mkColor(pg.CONFIG_OPTIONS['foreground'])
+    DEFAULT_COLOR: Final[QtGui.QColor] = pg.mkColor(pg.CONFIG_OPTIONS['foreground'])
 
-    toggled: Signal = Signal(int, bool, name='toggled')
-    itemChanged: Signal = Signal(int, str, name='itemChanged')
-    colorChanged: Signal = Signal(int, QColor, name='colorChanged')
+    toggled: QtCore.Signal = QtCore.Signal(int, bool, name='toggled')
+    itemChanged: QtCore.Signal = QtCore.Signal(int, str, name='itemChanged')
+    colorChanged: QtCore.Signal = QtCore.Signal(int, QtGui.QColor, name='colorChanged')
 
-    def __init__(self, settings: Settings, items: Sequence[str], parent: Optional[QWidget] = None, *args: Any) -> None:
+    def __init__(self, settings: Settings, items: Sequence[str], parent: Optional[QtWidgets.QWidget] = None,
+                 *args: Any) -> None:
         super().__init__(parent, *args)
 
         self._index: int = PlotLineOptions._count
 
         self.settings: Settings = settings
 
-        self.layout: QHBoxLayout = QHBoxLayout(self)
-        self.check_box: QCheckBox = QCheckBox(self)
-        self.options: QComboBox = QComboBox(self)
+        self.layout: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout(self)
+        self.check_box: QtWidgets.QCheckBox = QtWidgets.QCheckBox(self)
+        self.options: QtWidgets.QComboBox = QtWidgets.QComboBox(self)
         self.color_selector: pg.ColorButton = pg.ColorButton(self)
 
         self.layout.addWidget(self.check_box, 0)
@@ -69,7 +68,7 @@ class PlotLineOptions(QWidget):
         return self.options.currentText()
 
     @property
-    def color(self) -> QColor:
+    def color(self) -> QtGui.QColor:
         return self.color_selector.color()
 
     @property

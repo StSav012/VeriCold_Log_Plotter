@@ -3,13 +3,12 @@ import os
 from pathlib import Path
 from typing import Any, Dict, Final, List, Optional, Sequence, Tuple, Union, cast
 
-from PySide6.QtCore import QSettings
-from PySide6.QtGui import QColor
+from pyqtgraph.Qt import QtCore, QtGui
 
 __all__ = ['Settings']
 
 
-class Settings(QSettings):
+class Settings(QtCore.QSettings):
     """ convenient internal representation of the application settings """
     LINE_ENDS: Final[List[str]] = [r'Line Feed (\n)', r'Carriage Return (\r)', r'CR+LF (\r\n)', r'LF+CR (\n\r)']
     _LINE_ENDS: Final[List[str]] = ['\n', '\r', '\r\n', '\n\r']
@@ -21,7 +20,7 @@ class Settings(QSettings):
         self.check_items_names: List[str] = []
         self.check_items_values: List[bool] = []
 
-        self.line_colors: Dict[str, QColor] = dict()
+        self.line_colors: Dict[str, QtGui.QColor] = dict()
         self.line_enabled: Dict[str, bool] = dict()
         self.data_series_names: Dict[int, str] = dict()
 
@@ -29,7 +28,7 @@ class Settings(QSettings):
         key: str
         for key in self.allKeys():
             if key.endswith(' color'):
-                self.line_colors[key[:-6]] = cast(QColor, self.value(key))
+                self.line_colors[key[:-6]] = cast(QtGui.QColor, self.value(key))
             if key.endswith(' enabled'):
                 self.line_enabled[key[:-8]] = cast(bool, self.value(key, False, bool))
 
@@ -43,7 +42,7 @@ class Settings(QSettings):
     def sync(self) -> None:
         self.beginGroup('plot')
         key: str
-        color: QColor
+        color: QtGui.QColor
         enabled: bool
         for key, color in self.line_colors.items():
             self.setValue(f'{key} color', color)

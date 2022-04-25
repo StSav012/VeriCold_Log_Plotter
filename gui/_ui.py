@@ -7,11 +7,8 @@ from typing import Callable, Dict, Final, Iterable, List, Optional, Sequence, Un
 
 import numpy as np
 import pyqtgraph as pg  # type: ignore
-from PySide6.QtCore import QByteArray, QPoint, QRect, QTimer, QTranslator, Qt
-from PySide6.QtGui import QAction, QCloseEvent, QColor, QIcon, QKeySequence, QPixmap, QScreen
-from PySide6.QtWidgets import QApplication, QDockWidget, QFileDialog, QFormLayout, QGridLayout, QMainWindow, QMenu, \
-    QMenuBar, QMessageBox, QStatusBar, QStyle, QVBoxLayout, QWidget
 from numpy.typing import NDArray
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 from gui._data_model import DataModel
 from gui._plot import Plot
@@ -23,24 +20,25 @@ from log_parser import parse
 PLOT_LINES_COUNT: Final[int] = 8
 
 
-class MainWindow(QMainWindow):
-    _initial_window_title: Final[str] = QApplication.translate('initial main window title', 'VeriCold Plotter')
+class MainWindow(QtWidgets.QMainWindow):
+    _initial_window_title: Final[str] = QtWidgets.QApplication.translate('initial main window title',
+                                                                         'VeriCold Plotter')
 
-    def __init__(self, application: Optional[QApplication] = None,
-                 parent: Optional[QWidget] = None) -> None:
+    def __init__(self, application: Optional[QtWidgets.QApplication] = None,
+                 parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent=parent)
 
         self.settings: Settings = Settings('SavSoft', 'VeriCold Plotter', self)
-        self.application: Optional[QApplication] = application
+        self.application: Optional[QtWidgets.QApplication] = application
         self.install_translation()
 
-        self.central_widget: QWidget = QWidget(self)
-        self.main_layout: QGridLayout = QGridLayout(self.central_widget)
+        self.central_widget: QtWidgets.QWidget = QtWidgets.QWidget(self)
+        self.main_layout: QtWidgets.QGridLayout = QtWidgets.QGridLayout(self.central_widget)
 
-        self.dock_settings: QDockWidget = QDockWidget(self)
-        self.box_settings: QWidget = QWidget(self.dock_settings)
-        self.settings_layout: QVBoxLayout = QVBoxLayout(self.box_settings)
-        self.layout_x_axis: QFormLayout = QFormLayout()
+        self.dock_settings: QtWidgets.QDockWidget = QtWidgets.QDockWidget(self)
+        self.box_settings: QtWidgets.QWidget = QtWidgets.QWidget(self.dock_settings)
+        self.settings_layout: QtWidgets.QVBoxLayout = QtWidgets.QVBoxLayout(self.box_settings)
+        self.layout_x_axis: QtWidgets.QFormLayout = QtWidgets.QFormLayout()
         self.combo_x_axis: pg.ComboBox = pg.ComboBox(self.box_settings)
         self.combo_y_axis: List[PlotLineOptions] = [PlotLineOptions(items=[],
                                                                     settings=self.settings,
@@ -50,31 +48,31 @@ class MainWindow(QMainWindow):
         self.data_model: DataModel = DataModel()
         self.plot: Plot = Plot(self)
 
-        self.menu_bar: QMenuBar = QMenuBar(self)
-        self.menu_file: QMenu = QMenu(self.menu_bar)
-        self.menu_about: QMenu = QMenu(self.menu_bar)
-        self.action_open: QAction = QAction(self)
-        self.action_export: QAction = QAction(self)
-        self.action_reload: QAction = QAction(self)
-        self.action_auto_reload: QAction = QAction(self)
-        self.action_preferences: QAction = QAction(self)
-        self.action_quit: QAction = QAction(self)
-        self.action_about: QAction = QAction(self)
-        self.action_about_qt: QAction = QAction(self)
+        self.menu_bar: QtWidgets.QMenuBar = QtWidgets.QMenuBar(self)
+        self.menu_file: QtWidgets.QMenu = QtWidgets.QMenu(self.menu_bar)
+        self.menu_about: QtWidgets.QMenu = QtWidgets.QMenu(self.menu_bar)
+        self.action_open: QtGui.QAction = QtGui.QAction(self)
+        self.action_export: QtGui.QAction = QtGui.QAction(self)
+        self.action_reload: QtGui.QAction = QtGui.QAction(self)
+        self.action_auto_reload: QtGui.QAction = QtGui.QAction(self)
+        self.action_preferences: QtGui.QAction = QtGui.QAction(self)
+        self.action_quit: QtGui.QAction = QtGui.QAction(self)
+        self.action_about: QtGui.QAction = QtGui.QAction(self)
+        self.action_about_qt: QtGui.QAction = QtGui.QAction(self)
 
-        self.status_bar: QStatusBar = QStatusBar(self)
+        self.status_bar: QtWidgets.QStatusBar = QtWidgets.QStatusBar(self)
 
         self._opened_file_name: str = ''
         self._exported_file_name: str = ''
 
-        self.reload_timer: QTimer = QTimer(self)
+        self.reload_timer: QtCore.QTimer = QtCore.QTimer(self)
         self.file_created: float = 0.0
 
         self.setup_ui()
 
     def setup_ui(self) -> None:
         # https://ru.stackoverflow.com/a/1032610
-        window_icon: QPixmap = QPixmap()
+        window_icon: QtGui.QPixmap = QtGui.QPixmap()
         # noinspection PyTypeChecker
         window_icon.loadFromData(b'''\
                     <svg version="1.1" viewBox="0 0 135 135" xmlns="http://www.w3.org/2000/svg">\
@@ -89,7 +87,7 @@ class MainWindow(QMainWindow):
                     4.5-18v-2e-6c.003-6.4-1.7-13-4.5-18-3.1-5.8-7.7-11-13-14-5.9-4-12-5.8-18-6.5-12-1.4-20 \
                     2.3-20 1.2z" fill="#282e70"/></svg>\
                     ''', 'SVG')
-        self.setWindowIcon(QIcon(window_icon))
+        self.setWindowIcon(QtGui.QIcon(window_icon))
 
         self.setObjectName('main_window')
         self.resize(640, 480)
@@ -97,35 +95,40 @@ class MainWindow(QMainWindow):
         self.main_layout.setObjectName('main_layout')
         self.main_layout.addWidget(self.plot)
         self.setCentralWidget(self.central_widget)
-        self.menu_bar.setGeometry(QRect(0, 0, 800, 29))
+        self.menu_bar.setGeometry(QtCore.QRect(0, 0, 800, 29))
         self.menu_bar.setObjectName('menu_bar')
         self.menu_file.setObjectName('menu_file')
         self.menu_about.setObjectName('menu_about')
         self.setMenuBar(self.menu_bar)
         self.status_bar.setObjectName('status_bar')
         self.setStatusBar(self.status_bar)
-        self.action_open.setIcon(QIcon.fromTheme('document-open',
-                                                 self.style().standardIcon(QStyle.StandardPixmap.SP_DialogOpenButton)))
+        self.action_open.setIcon(
+            QtGui.QIcon.fromTheme('document-open',
+                                  self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_DialogOpenButton)))
         self.action_open.setObjectName('action_open')
-        self.action_export.setIcon(QIcon.fromTheme('document-save-as'))
+        self.action_export.setIcon(QtGui.QIcon.fromTheme('document-save-as'))
         self.action_export.setObjectName('action_export')
-        self.action_reload.setIcon(QIcon.fromTheme('view-refresh',
-                                                   self.style().standardIcon(QStyle.StandardPixmap.SP_BrowserReload)))
+        self.action_reload.setIcon(
+            QtGui.QIcon.fromTheme('view-refresh',
+                                  self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_BrowserReload)))
         self.action_reload.setObjectName('action_reload')
         self.action_auto_reload.setObjectName('action_auto_reload')
-        self.action_preferences.setMenuRole(QAction.PreferencesRole)
+        self.action_preferences.setMenuRole(QtGui.QAction.PreferencesRole)
         self.action_preferences.setObjectName('action_preferences')
-        self.action_quit.setIcon(QIcon.fromTheme('application-exit',
-                                                 self.style().standardIcon(QStyle.StandardPixmap.SP_DialogCloseButton)))
-        self.action_quit.setMenuRole(QAction.QuitRole)
+        self.action_quit.setIcon(
+            QtGui.QIcon.fromTheme('application-exit',
+                                  self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_DialogCloseButton)))
+        self.action_quit.setMenuRole(QtGui.QAction.QuitRole)
         self.action_quit.setObjectName('action_quit')
-        self.action_about.setIcon(QIcon.fromTheme('help-about',
-                                                  self.style().standardIcon(QStyle.StandardPixmap.SP_DialogHelpButton)))
-        self.action_about.setMenuRole(QAction.AboutRole)
+        self.action_about.setIcon(
+            QtGui.QIcon.fromTheme('help-about',
+                                  self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_DialogHelpButton)))
+        self.action_about.setMenuRole(QtGui.QAction.AboutRole)
         self.action_about.setObjectName('action_about')
-        self.action_about_qt.setIcon(QIcon.fromTheme('help-about-qt',
-                                                     QIcon(':/qt-project.org/q''messagebox/images/qt''logo-64.png')))
-        self.action_about_qt.setMenuRole(QAction.AboutQtRole)
+        self.action_about_qt.setIcon(
+            QtGui.QIcon.fromTheme('help-about-qt',
+                                  QtGui.QIcon(':/qt-project.org/q''messagebox/images/qt''logo-64.png')))
+        self.action_about_qt.setMenuRole(QtGui.QAction.AboutQtRole)
         self.action_about_qt.setObjectName('action_about_qt')
         self.menu_file.addAction(self.action_open)
         self.menu_file.addAction(self.action_export)
@@ -145,12 +148,12 @@ class MainWindow(QMainWindow):
         self.action_auto_reload.setEnabled(False)
         self.action_auto_reload.setCheckable(True)
 
-        self.action_open.setShortcut(QKeySequence('Ctrl+O'))
-        self.action_export.setShortcuts((QKeySequence('Ctrl+S'), QKeySequence('Ctrl+E')))
-        self.action_reload.setShortcuts((QKeySequence('Ctrl+R'), QKeySequence('F5')))
-        self.action_preferences.setShortcut(QKeySequence('Ctrl+,'))
-        self.action_quit.setShortcuts((QKeySequence('Ctrl+Q'), QKeySequence('Ctrl+X')))
-        self.action_about.setShortcut(QKeySequence('F1'))
+        self.action_open.setShortcut(QtGui.QKeySequence('Ctrl+O'))
+        self.action_export.setShortcuts((QtGui.QKeySequence('Ctrl+S'), QtGui.QKeySequence('Ctrl+E')))
+        self.action_reload.setShortcuts((QtGui.QKeySequence('Ctrl+R'), QtGui.QKeySequence('F5')))
+        self.action_preferences.setShortcut(QtGui.QKeySequence('Ctrl+,'))
+        self.action_quit.setShortcuts((QtGui.QKeySequence('Ctrl+Q'), QtGui.QKeySequence('Ctrl+X')))
+        self.action_about.setShortcut(QtGui.QKeySequence('F1'))
 
         self.action_open.triggered.connect(self.on_action_open_triggered)
         self.action_export.triggered.connect(self.on_action_export_triggered)
@@ -162,8 +165,8 @@ class MainWindow(QMainWindow):
         self.action_about_qt.triggered.connect(self.on_action_about_qt_triggered)
 
         self.dock_settings.setObjectName('dock_settings')
-        self.dock_settings.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
-        self.dock_settings.setFeatures(cast(QDockWidget.DockWidgetFeatures,
+        self.dock_settings.setAllowedAreas(QtCore.Qt.DockWidgetArea.AllDockWidgetAreas)
+        self.dock_settings.setFeatures(cast(QtWidgets.QDockWidget.DockWidgetFeatures,
                                             cast(int, self.dock_settings.features())
                                             & ~self.dock_settings.DockWidgetClosable))
         self.dock_settings.setWidget(self.box_settings)
@@ -172,7 +175,7 @@ class MainWindow(QMainWindow):
         cb: PlotLineOptions
         for cb in self.combo_y_axis:
             self.settings_layout.addWidget(cb)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.dock_settings)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.dock_settings)
 
         self.setWindowTitle(self._initial_window_title)
         self.menu_file.setTitle(self.tr('File'))
@@ -184,7 +187,7 @@ class MainWindow(QMainWindow):
         self.action_preferences.setText(self.tr('Preferences...'))
         self.action_quit.setText(self.tr('Quit'))
         self.action_about.setText(self.tr('About'))
-        self.action_about_qt.setText(self.tr('About Qt'))
+        self.action_about_qt.setText(self.tr('About QtCore.Qt'))
         self.dock_settings.setWindowTitle(self.tr('Options'))
 
         self.load_settings()
@@ -198,7 +201,7 @@ class MainWindow(QMainWindow):
         self.reload_timer.setInterval(1000)
         self.reload_timer.timeout.connect(self.on_timeout)
 
-    def closeEvent(self, event: QCloseEvent) -> None:
+    def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         self.reload_timer.stop()
         self.save_settings()
         event.accept()
@@ -211,16 +214,16 @@ class MainWindow(QMainWindow):
 
         self.settings.beginGroup('window')
         # Fallback: Center the window
-        desktop: QScreen = QApplication.screens()[0]
-        window_frame: QRect = self.frameGeometry()
-        desktop_center: QPoint = desktop.availableGeometry().center()
+        desktop: QtGui.QScreen = QtWidgets.QApplication.screens()[0]
+        window_frame: QtCore.QRect = self.frameGeometry()
+        desktop_center: QtCore.QPoint = desktop.availableGeometry().center()
         window_frame.moveCenter(desktop_center)
         self.move(window_frame.topLeft())
 
         # noinspection PyTypeChecker
-        self.restoreGeometry(cast(QByteArray, self.settings.value('geometry', QByteArray())))
+        self.restoreGeometry(cast(QtCore.QByteArray, self.settings.value('geometry', QtCore.QByteArray())))
         # noinspection PyTypeChecker
-        self.restoreState(cast(QByteArray, self.settings.value('state', QByteArray())))
+        self.restoreState(cast(QtCore.QByteArray, self.settings.value('state', QtCore.QByteArray())))
         self.settings.endGroup()
 
     def save_settings(self) -> None:
@@ -237,7 +240,7 @@ class MainWindow(QMainWindow):
 
     def install_translation(self) -> None:
         if self.application is not None and self.settings.translation_path is not None:
-            translator: QTranslator = QTranslator(self)
+            translator: QtCore.QTranslator = QtCore.QTranslator(self)
             translator.load(str(self.settings.translation_path))
             self.application.installTranslator(translator)
 
@@ -247,7 +250,7 @@ class MainWindow(QMainWindow):
             return False
         titles: List[str]
         data: NDArray[np.float64]
-        if isinstance(file_name, (set, Sequence[str], GeneratorType)):
+        if isinstance(file_name, (set, Sequence, Iterable, GeneratorType)):
             all_titles: List[List[str]] = []
             all_data: List[NDArray[np.float64]] = []
             _file_names: Union[Iterable[str], GeneratorType] = file_name
@@ -360,7 +363,7 @@ class MainWindow(QMainWindow):
 
     def on_action_open_triggered(self) -> None:
         new_file_name: str
-        new_file_name, _ = QFileDialog.getOpenFileName(
+        new_file_name, _ = QtWidgets.QFileDialog.getOpenFileName(
             self, self.tr('Open'),
             self._opened_file_name,
             f'{self.tr("VeriCold data logfile")} (*.vcl);;{self.tr("All Files")} (*.*)')
@@ -384,7 +387,7 @@ class MainWindow(QMainWindow):
         new_file_name: str
         new_file_name_filter: str  # BUG: it's empty when a native dialog is used
         # noinspection PyTypeChecker
-        new_file_name, new_file_name_filter = QFileDialog.getSaveFileName(
+        new_file_name, new_file_name_filter = QtWidgets.QFileDialog.getSaveFileName(
             self, self.tr('Export'),
             str(Path(self._exported_file_name or self._opened_file_name)
                 .with_name(Path(self._opened_file_name).name)),
@@ -415,21 +418,21 @@ class MainWindow(QMainWindow):
         self.close()
 
     def on_action_about_triggered(self) -> None:
-        QMessageBox.about(self,
-                          self.tr("About VeriCold Log Plotter"),
-                          "<html><p>"
-                          + self.tr("VeriCold logfiles are created by Oxford Instruments plc.")
-                          + "</p><br><p>"
-                          + self.tr("VeriCold Log Plotter is licensed under the {0}.")
-                          .format("<a href='https://www.gnu.org/copyleft/lesser.html'>{0}</a>"
-                                  .format(self.tr("GNU LGPL version 3")))
-                          + "</p><p>"
-                          + self.tr("The source code is available on {0}.").format(
-                              "<a href='https://github.com/StSav012/VeriCold_Log_Plotter'>GitHub</a>")
-                          + "</p></html>")
+        QtWidgets.QMessageBox.about(self,
+                                    self.tr("About VeriCold Log Plotter"),
+                                    "<html><p>"
+                                    + self.tr("VeriCold logfiles are created by Oxford Instruments plc.")
+                                    + "</p><br><p>"
+                                    + self.tr("VeriCold Log Plotter is licensed under the {0}.")
+                                    .format("<a href='https://www.gnu.org/copyleft/lesser.html'>{0}</a>"
+                                            .format(self.tr("GNU LGPL version 3")))
+                                    + "</p><p>"
+                                    + self.tr("The source code is available on {0}.").format(
+                                        "<a href='https://github.com/StSav012/VeriCold_Log_Plotter'>GitHub</a>")
+                                    + "</p></html>")
 
     def on_action_about_qt_triggered(self) -> None:
-        QMessageBox.aboutQt(self)
+        QtWidgets.QMessageBox.aboutQt(self)
 
     def on_x_axis_changed(self, new_text: str) -> None:
         sender_index: int
@@ -441,7 +444,7 @@ class MainWindow(QMainWindow):
     def on_y_axis_changed(self, sender_index: int, title: str) -> None:
         self.plot.replot(sender_index, self.data_model, self.combo_x_axis.currentText(), title)
 
-    def on_color_changed(self, sender_index: int, new_color: QColor) -> None:
+    def on_color_changed(self, sender_index: int, new_color: QtGui.QColor) -> None:
         self.plot.replot(sender_index, self.data_model,
                          self.combo_x_axis.currentText(), self.combo_y_axis[sender_index].option,
                          color=new_color)
