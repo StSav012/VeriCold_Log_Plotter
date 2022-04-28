@@ -1,9 +1,28 @@
 # -*- coding: utf-8 -*-
 from typing import Set
 
-from pyqtgraph.Qt import QtCore, QtWidgets
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 from gui._ui import MainWindow
+
+__all__ = ['run']
+
+""" Compatibility fixes"""
+
+if not hasattr(QtGui, 'QAction'):  # PyQt5, PySide2
+    QtGui.QAction = QtWidgets.QAction
+
+if not hasattr(QtWidgets.QApplication, 'exec'):  # PySide2
+    QtWidgets.QApplication.exec = QtWidgets.QApplication.exec_
+
+if not hasattr(QtCore.QDateTime, 'toPython'):  # PyQt5, PyQt6
+    QtCore.QDateTime.toPython = lambda self: QtCore.QDateTime.toPyDateTime(self)  # why can't we reduce the lambda??
+
+if not hasattr(QtCore.QLibraryInfo, 'path'):  # PyQt5, PySide2
+    QtCore.QLibraryInfo.path = QtCore.QLibraryInfo.location
+
+if not hasattr(QtCore.QLibraryInfo, 'LibraryPath'):  # PyQt5, PySide2
+    QtCore.QLibraryInfo.LibraryPath = QtCore.QLibraryInfo.LibraryLocation
 
 
 def run() -> None:
@@ -16,13 +35,13 @@ def run() -> None:
     qt_translator: QtCore.QTranslator = QtCore.QTranslator()
     for language in languages:
         if qt_translator.load('qt_' + language,
-                              QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.TranslationsPath)):
+                              QtCore.QLibraryInfo.path(QtCore.QLibraryInfo.LibraryPath.TranslationsPath)):
             app.installTranslator(qt_translator)
             break
     qtbase_translator: QtCore.QTranslator = QtCore.QTranslator()
     for language in languages:
         if qtbase_translator.load('qtbase_' + language,
-                                  QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.TranslationsPath)):
+                                  QtCore.QLibraryInfo.path(QtCore.QLibraryInfo.LibraryPath.TranslationsPath)):
             app.installTranslator(qtbase_translator)
             break
 

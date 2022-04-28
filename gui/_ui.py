@@ -117,22 +117,22 @@ class MainWindow(QtWidgets.QMainWindow):
                                   self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_BrowserReload)))
         self.action_reload.setObjectName('action_reload')
         self.action_auto_reload.setObjectName('action_auto_reload')
-        self.action_preferences.setMenuRole(QtGui.QAction.PreferencesRole)
+        self.action_preferences.setMenuRole(QtGui.QAction.MenuRole.PreferencesRole)
         self.action_preferences.setObjectName('action_preferences')
         self.action_quit.setIcon(
             QtGui.QIcon.fromTheme('application-exit',
                                   self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_DialogCloseButton)))
-        self.action_quit.setMenuRole(QtGui.QAction.QuitRole)
+        self.action_quit.setMenuRole(QtGui.QAction.MenuRole.QuitRole)
         self.action_quit.setObjectName('action_quit')
         self.action_about.setIcon(
             QtGui.QIcon.fromTheme('help-about',
                                   self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_DialogHelpButton)))
-        self.action_about.setMenuRole(QtGui.QAction.AboutRole)
+        self.action_about.setMenuRole(QtGui.QAction.MenuRole.AboutRole)
         self.action_about.setObjectName('action_about')
         self.action_about_qt.setIcon(
             QtGui.QIcon.fromTheme('help-about-qt',
                                   QtGui.QIcon(':/qt-project.org/q''messagebox/images/qt''logo-64.png')))
-        self.action_about_qt.setMenuRole(QtGui.QAction.AboutQtRole)
+        self.action_about_qt.setMenuRole(QtGui.QAction.MenuRole.AboutQtRole)
         self.action_about_qt.setObjectName('action_about_qt')
         self.menu_file.addAction(self.action_open)
         self.menu_file.addAction(self.action_export)
@@ -175,16 +175,16 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.dock_settings.setObjectName('dock_settings')
         self.dock_settings.setAllowedAreas(QtCore.Qt.DockWidgetArea.AllDockWidgetAreas)
-        self.dock_settings.setFeatures(cast(QtWidgets.QDockWidget.DockWidgetFeatures,
+        self.dock_settings.setFeatures(cast(QtWidgets.QDockWidget.DockWidgetFeature,
                                             cast(int, self.dock_settings.features())
-                                            & ~self.dock_settings.DockWidgetClosable))
+                                            & ~self.dock_settings.DockWidgetFeature.DockWidgetClosable))
         self.dock_settings.setWidget(self.box_settings)
         self.layout_x_axis.addRow(self.tr('x-axis:'), self.combo_x_axis)
         self.settings_layout.addLayout(self.layout_x_axis)
         cb: PlotLineOptions
         for cb in self.combo_y_axis:
             self.settings_layout.addWidget(cb)
-        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.dock_settings)
+        self.addDockWidget(QtCore.Qt.DockWidgetArea.RightDockWidgetArea, self.dock_settings)
 
         self.setWindowTitle(self._initial_window_title)
         self.menu_file.setTitle(self.tr('File'))
@@ -406,7 +406,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def on_action_open_triggered(self) -> None:
         new_file_name: str
-        new_file_name, _ = pg.FileDialog.getOpenFileName(
+        new_file_name, _ = QtWidgets.QFileDialog.getOpenFileName(
             self, self.tr('Open'),
             self._opened_file_name,
             f'{self.tr("VeriCold data logfile")} (*.vcl);;{self.tr("All Files")} (*.*)')
@@ -430,12 +430,12 @@ class MainWindow(QtWidgets.QMainWindow):
         new_file_name: str
         new_file_name_filter: str  # BUG: it's empty when a native dialog is used
         # noinspection PyTypeChecker
-        new_file_name, new_file_name_filter = pg.FileDialog.getSaveFileName(
+        new_file_name, new_file_name_filter = QtWidgets.QFileDialog.getSaveFileName(
             self, self.tr('Export'),
             str(Path(self._exported_file_name or self._opened_file_name)
                 .with_name(Path(self._opened_file_name).name)),
-            filter=';;'.join(supported_formats.values()),
-            selectedFilter=selected_filter,
+            ';;'.join(supported_formats.values()),
+            selected_filter,
         )
         if not new_file_name:
             return

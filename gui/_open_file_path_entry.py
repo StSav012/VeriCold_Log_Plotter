@@ -19,19 +19,19 @@ class OpenFilePathEntry(QtWidgets.QWidget):
 
         self._path: Optional[Path] = None
 
-        self.setLayout(QtWidgets.QHBoxLayout())
+        layout: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout(self)
 
         self.text: QtWidgets.QLabel = QtWidgets.QLabel(self)
         self.path = initial_file_path
         self.text.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextBrowserInteraction
                                           | QtCore.Qt.TextInteractionFlag.TextSelectableByKeyboard)
-        self.layout().addWidget(self.text)
+        layout.addWidget(self.text)
 
         self.browse_button: QtWidgets.QPushButton = QtWidgets.QPushButton(self.tr('Browse...'), self)
         self.browse_button.clicked.connect(self.on_browse_button_clicked)
         self.layout().addWidget(self.browse_button)
 
-        self.layout().setStretch(1, 0)
+        layout.setStretch(1, 0)
 
     @property
     def path(self) -> Optional[Path]:

@@ -35,7 +35,7 @@ class Plot(QtWidgets.QWidget):
 
         self.canvas: pg.PlotItem = plot.getPlotItem()
         self.canvas.setAxisItems({'bottom': pg.DateAxisItem()})
-        is_dark: bool = self.palette().color(QtGui.QPalette.Window).lightness() < 128
+        is_dark: bool = self.palette().color(QtGui.QPalette.ColorRole.Window).lightness() < 128
 
         def set_colors(background_color: str, foreground_color: str) -> None:
             ax: pg.AxisItem

@@ -29,7 +29,7 @@ class TimeSpanEdit(QtWidgets.QAbstractSpinBox):
     def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
 
-        self.setAlignment(cast(QtCore.Qt.Alignment, QtCore.Qt.AlignmentFlag.AlignRight))
+        self.setAlignment(cast(QtCore.Qt.AlignmentFlag, QtCore.Qt.AlignmentFlag.AlignRight))
 
         self._last_correct_delta: timedelta = timedelta(days=1)
 
@@ -74,15 +74,16 @@ class TimeSpanEdit(QtWidgets.QAbstractSpinBox):
         self.lineEdit().setCursorPosition(cursor_position)
         self.timeSpanChanged.emit(self.time_delta)
 
-    def stepEnabled(self) -> QtWidgets.QAbstractSpinBox.StepEnabled:
+    def stepEnabled(self) -> QtWidgets.QAbstractSpinBox.StepEnabledFlag:
         if not self.hasAcceptableInput():
-            return cast(QtWidgets.QAbstractSpinBox.StepEnabled, QtWidgets.QAbstractSpinBox.StepEnabledFlag.StepNone)
+            return cast(QtWidgets.QAbstractSpinBox.StepEnabledFlag, QtWidgets.QAbstractSpinBox.StepEnabledFlag.StepNone)
         if self.time_delta.total_seconds() > 0.:
             return cast(
-                QtWidgets.QAbstractSpinBox.StepEnabled,
+                QtWidgets.QAbstractSpinBox.StepEnabledFlag,
                 QtWidgets.QAbstractSpinBox.StepEnabledFlag.StepDownEnabled
                 | QtWidgets.QAbstractSpinBox.StepEnabledFlag.StepUpEnabled)
-        return cast(QtWidgets.QAbstractSpinBox.StepEnabled, QtWidgets.QAbstractSpinBox.StepEnabledFlag.StepUpEnabled)
+        return cast(QtWidgets.QAbstractSpinBox.StepEnabledFlag,
+                    QtWidgets.QAbstractSpinBox.StepEnabledFlag.StepUpEnabled)
 
     def validate(self, text: str, cursor_position: int) -> Tuple[QtGui.QValidator.State, str, int]:
         # remove invalid characters
