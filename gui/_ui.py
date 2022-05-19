@@ -176,7 +176,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dock_settings.setObjectName('dock_settings')
         self.dock_settings.setAllowedAreas(QtCore.Qt.DockWidgetArea.AllDockWidgetAreas)
         self.dock_settings.setFeatures(cast(QtWidgets.QDockWidget.DockWidgetFeature,
-                                            cast(int, self.dock_settings.features())
+                                            self.dock_settings.features()
                                             & ~self.dock_settings.DockWidgetFeature.DockWidgetClosable))
         self.dock_settings.setWidget(self.box_settings)
         self.layout_x_axis.addRow(self.tr('x-axis:'), self.combo_x_axis)
@@ -260,7 +260,7 @@ class MainWindow(QtWidgets.QMainWindow):
             return False
         titles: List[str]
         data: NDArray[np.float64]
-        if isinstance(file_name, (set, Sequence, Iterable, GeneratorType)):
+        if isinstance(file_name, (set, Sequence, Iterable, GeneratorType)) and not isinstance(file_name, str):
             all_titles: List[List[str]] = []
             all_data: List[NDArray[np.float64]] = []
             _file_names: Union[Iterable[str], GeneratorType] = file_name
