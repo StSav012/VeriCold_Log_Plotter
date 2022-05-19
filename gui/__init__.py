@@ -16,7 +16,8 @@ if not hasattr(QtWidgets.QApplication, 'exec'):  # PySide2
     QtWidgets.QApplication.exec = QtWidgets.QApplication.exec_
 
 if not hasattr(QtCore.QDateTime, 'toPython'):  # PyQt5, PyQt6
-    QtCore.QDateTime.toPython = lambda self: QtCore.QDateTime.toPyDateTime(self)  # why can't we reduce the lambda??
+    # see https://stackoverflow.com/a/72057407/8554611 to find out why we can't reduce lambda here
+    QtCore.QDateTime.toPython = lambda self: QtCore.QDateTime.toPyDateTime(self)
 
 if not hasattr(QtCore.QLibraryInfo, 'path'):  # PyQt5, PySide2
     QtCore.QLibraryInfo.path = QtCore.QLibraryInfo.location
