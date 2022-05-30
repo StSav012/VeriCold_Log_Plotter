@@ -81,6 +81,8 @@ class PlotLineOptions(QtWidgets.QWidget):
 
     def on_combo_changed(self, new_text: str) -> None:
         self.settings.data_series_names[self._index] = new_text
+        self.color_selector.setColor(self.settings.line_colors.get(new_text, PlotLineOptions.DEFAULT_COLOR),
+                                     finished=False)
         self.itemChanged.emit(self._index, new_text)
 
     def on_color_changed(self, emitter: pg.ColorButton) -> None:
