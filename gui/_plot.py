@@ -70,8 +70,8 @@ class Plot(QtWidgets.QWidget):
                     visible_data.append(visible_data_piece)
             if not visible_data:
                 return
-            min_y: float = min(np.min(d) for d in visible_data if d.size)
-            max_y: float = max(np.max(d) for d in visible_data if d.size)
+            min_y: float = min(np.nanmin(d) for d in visible_data)
+            max_y: float = max(np.nanmax(d) for d in visible_data)
             self.canvas.vb.setYRange(min_y, max_y, padding=0.0)
 
         def on_view_all_triggered() -> None:
