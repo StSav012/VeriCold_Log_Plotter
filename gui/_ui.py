@@ -3,7 +3,7 @@
 from datetime import datetime
 from pathlib import Path
 from types import GeneratorType
-from typing import Callable, Dict, Final, Iterable, List, Optional, Sequence, Tuple, Union, cast
+from typing import Callable, Dict, Final, Iterable, List, Optional, Sequence, TextIO, Tuple, Union, cast
 
 import numpy as np
 import pyqtgraph as pg  # type: ignore
@@ -254,13 +254,13 @@ class MainWindow(QtWidgets.QMainWindow):
             translator.load(str(self.settings.translation_path))
             self.application.installTranslator(translator)
 
-    def load_file(self, file_name: Union[str, Iterable[str], GeneratorType],
+    def load_file(self, file_name: Union[str, Iterable[str]],
                   check_file_updates: bool = False) -> bool:
         if not file_name:
             return False
         titles: List[str]
         data: NDArray[np.float64]
-        if isinstance(file_name, (set, Sequence, Iterable, GeneratorType)) and not isinstance(file_name, str):
+        if isinstance(file_name, (set, Sequence, Iterable)) and not isinstance(file_name, str):
             all_titles: List[List[str]] = []
             all_data: List[NDArray[np.float64]] = []
             _file_names: Union[Iterable[str], GeneratorType] = file_name
@@ -329,7 +329,7 @@ class MainWindow(QtWidgets.QMainWindow):
         ((x_min, x_max), (y_min, y_max)) = self.plot.view_range
         data = data[..., ((data[0] >= x_min) & (data[0] <= x_max))]
         d: NDArray[np.float64]
-        somehow_visible_lines: List[bool] = [True] + [np.any((d >= y_min) & (d <= y_max)) for d in data[1:]]
+        somehow_visible_lines: List[bool] = [True] + [bool(np.any((d >= y_min) & (d <= y_max))) for d in data[1:]]
         data = data[somehow_visible_lines]
         b: bool
         header = [h for h, b in zip(header, somehow_visible_lines) if b]
@@ -343,9 +343,14 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             data, header = self.visible_data()
         try:
-            np.savetxt(filename, data.T, fmt='%s',
-                       delimiter=self.settings.csv_separator, newline=self.settings.line_end,
-                       header=self.settings.csv_separator.join(header))
+            f_out: TextIO
+            with open(filename, 'wt', newline='') as f_out:
+                f_out.write(self.settings.csv_separator.join(header) + self.settings.line_end)
+                f_out.writelines(((self.settings.csv_separator.join(f'{xii}' for xii in xi)
+                                   if isinstance(xi, Iterable)
+                                   else f'{xi}'
+                                   ) + self.settings.line_end)
+                                 for xi in data.T)
         except IOError as ex:
             self.status_bar.showMessage(' '.join(ex.args))
             return False
