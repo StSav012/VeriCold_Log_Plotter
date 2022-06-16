@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from pathlib import Path
-from typing import BinaryIO, Final, List, Optional, Tuple, Union
+from typing import BinaryIO, Final, List, Optional, Tuple, Union, cast
 
 _MAX_CHANNELS_COUNT: Final[int] = 52
 
@@ -19,7 +19,7 @@ try:
             titles = list(filter(None, titles))
             file_handle.seek(0x3000)
             # noinspection PyTypeChecker
-            dt: np.dtype = np.dtype(np.float64).newbyteorder('<')
+            dt: np.dtype[np.generic] = np.dtype(np.float64).newbyteorder('<')
             data: NDArray[np.float64] = np.frombuffer(file_handle.read(), dtype=dt)
             i: int = 0
             data_item_size: Optional[int] = None
@@ -45,7 +45,7 @@ except ImportError:
     def parse(filename: Union[str, Path, BinaryIO]) -> Tuple[List[str], List[List[float]]]:
         def _parse(file_handle: BinaryIO) -> Tuple[List[str], List[List[float]]]:
             file_handle.seek(0x1800 + 32)
-            titles: List[str] = list(map(lambda s: s.strip(b'\0').decode('ascii'),
+            titles: List[str] = list(map(lambda s: cast(str, s.strip(b'\0').decode('ascii')),
                                          struct.unpack_from('<' + '32s' * (_MAX_CHANNELS_COUNT - 1),
                                                             file_handle.read((_MAX_CHANNELS_COUNT - 1) * 32))))
             titles = list(filter(None, titles))

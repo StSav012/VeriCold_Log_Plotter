@@ -26,7 +26,7 @@ class DataModel:
     def data(self) -> NDArray[np.float64]:
         return self._data
 
-    def __getitem__(self, column_index: Union[int, slice, NDArray[np.int]]) -> NDArray[np.float64]:
+    def __getitem__(self, column_index: Union[int, slice, NDArray[np.int_]]) -> NDArray[np.float64]:
         return self._data[column_index]
 
     def item(self, row_index: int, column_index: int) -> float:
@@ -35,7 +35,7 @@ class DataModel:
     def set_data(self, new_data: Union[List[List[float]], NDArray[np.float64]],
                  new_header: Optional[List[str]] = None) -> None:
         self._data = np.array(new_data)
-        good: NDArray[np.bool] = np.full(self._data.shape[0], True)
+        good: NDArray[np.bool_] = np.full(self._data.shape[0], True, dtype=np.bool_)
         if new_header is not None and 'LineNumber' in new_header:
             good[new_header.index('LineNumber')] = False
         self._data = self._data[good]

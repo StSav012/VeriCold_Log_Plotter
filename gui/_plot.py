@@ -230,7 +230,7 @@ class Plot(QtWidgets.QWidget):
         if self.lines:
             self.clear()
 
-        y_column_name: str
+        y_column_name: Optional[str]
         color: QtGui.QColor
         visible: bool
         y_column_names = tuple(y_column_names)
@@ -239,7 +239,7 @@ class Plot(QtWidgets.QWidget):
             for y_column_name, color, visible in zip(y_column_names,
                                                      cycle(colors or [pg.CONFIG_OPTIONS['foreground']]),
                                                      cycle(visibility or [True])):
-                y_column: int = data_model.header.index(y_column_name)
+                y_column: int = data_model.header.index(cast(str, y_column_name))  # no Nones here
                 self.lines.append(self.canvas.plot(data_model[x_column], data_model[y_column], pen=color))
                 self.lines[-1].curve.opts['pen'].setCosmetic(True)
                 self.lines[-1].setVisible(visible)
