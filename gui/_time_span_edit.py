@@ -1,6 +1,8 @@
 # coding: utf-8
+from __future__ import annotations
+
 from datetime import timedelta
-from typing import List, Optional, Tuple, cast
+from typing import Optional, cast
 
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
@@ -85,7 +87,7 @@ class TimeSpanEdit(QtWidgets.QAbstractSpinBox):
         return cast(QtWidgets.QAbstractSpinBox.StepEnabledFlag,
                     QtWidgets.QAbstractSpinBox.StepEnabledFlag.StepUpEnabled)
 
-    def validate(self, text: str, cursor_position: int) -> Tuple[QtGui.QValidator.State, str, int]:
+    def validate(self, text: str, cursor_position: int) -> tuple[QtGui.QValidator.State, str, int]:
         # remove invalid characters
         valid_characters: str = '0123456789:' + self.locale().decimalPoint()
         i: int = 0
@@ -100,7 +102,7 @@ class TimeSpanEdit(QtWidgets.QAbstractSpinBox):
         if not text:
             return QtGui.QValidator.State.Intermediate, text, cursor_position
 
-        parts: List[str] = text.split(':')
+        parts: list[str] = text.split(':')
         if len(parts) <= 4 and not all(parts):
             # text starts or ends with ':' or contains '::', the rest has not been entered yet
             return QtGui.QValidator.State.Intermediate, text, cursor_position
@@ -143,7 +145,7 @@ class TimeSpanEdit(QtWidgets.QAbstractSpinBox):
     def time_delta(self) -> timedelta:
         if not self.text():
             raise ValueError
-        parts: List[str] = self.text().split(':')
+        parts: list[str] = self.text().split(':')
         ok: bool
         seconds: float
         minutes: int = 0

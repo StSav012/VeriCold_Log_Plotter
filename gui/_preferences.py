@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Any, Dict, Optional, Sequence, Tuple, Union
+from typing import Any, Optional, Sequence
 
 from pyqtgraph.Qt import QtWidgets
 
@@ -25,28 +27,29 @@ class Preferences(QtWidgets.QDialog):
         layout: QtWidgets.QVBoxLayout = QtWidgets.QVBoxLayout(self)
         combo_box: QtWidgets.QComboBox
         check_box: QtWidgets.QCheckBox
-        spin_box: Union[QtWidgets.QSpinBox, QtWidgets.QDoubleSpinBox]
+        spin_box: QtWidgets.QSpinBox | QtWidgets.QDoubleSpinBox
         open_file_path_entry: OpenFilePathEntry
         key: str
-        value: Union[
-            Dict[str, Tuple[str]],
-            Dict[str, Tuple[Path]],
-            Dict[str, Tuple[Sequence[str], str]],
-            Dict[str, Tuple[Sequence[str], Sequence[str], str]],
-        ]
+        value: (
+            dict[str, tuple[str]] |
+            dict[str, tuple[Path]] |
+            dict[str, tuple[Sequence[str], str]] |
+            dict[str, tuple[Sequence[str], Sequence[str], str]]
+        )
         for key, value in self.settings.dialog.items():
             if isinstance(value, dict):
                 box: QtWidgets.QGroupBox = QtWidgets.QGroupBox(key, self)
                 box_layout: QtWidgets.QFormLayout = QtWidgets.QFormLayout(box)
                 key2: str
-                value2: Union[Tuple[str],
-                              Tuple[Path],
-                              Tuple[Sequence[str], str],
-                              Tuple[Sequence[str], Sequence[str], str],
-                              ]
+                value2: (
+                    tuple[str] |
+                    tuple[Path] |
+                    tuple[Sequence[str], str] |
+                    tuple[Sequence[str], Sequence[str], str]
+                )
                 value3: Sequence[str]
-                value3a: Union[Sequence[str], slice]
-                value3b: Union[Sequence[Any], Tuple[str]]
+                value3a: Sequence[str] | slice
+                value3b: Sequence[Any] | tuple[str]
                 value3c: str
                 index: int
                 item: str
@@ -125,6 +128,7 @@ class Preferences(QtWidgets.QDialog):
                     # no else
                 layout.addWidget(box)
             # no else
-        buttons: QtWidgets.QDialogButtonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Close, self)
+        buttons: QtWidgets.QDialogButtonBox \
+            = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.StandardButton.Close, self)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)

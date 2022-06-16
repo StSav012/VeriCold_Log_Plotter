@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 import os
 from pathlib import Path
-from typing import Any, Dict, Final, List, Optional, Sequence, Tuple, Union, cast
+from typing import Any, Final, Optional, Sequence, cast
 
 from pyqtgraph.Qt import QtCore, QtGui
 
@@ -10,19 +12,19 @@ __all__ = ['Settings']
 
 class Settings(QtCore.QSettings):
     """ convenient internal representation of the application settings """
-    LINE_ENDS: Final[List[str]] = [r'Line Feed (\n)', r'Carriage Return (\r)', r'CR+LF (\r\n)', r'LF+CR (\n\r)']
-    _LINE_ENDS: Final[List[str]] = ['\n', '\r', '\r\n', '\n\r']
-    CSV_SEPARATORS: Final[List[str]] = [r'comma (,)', r'tab (\t)', r'semicolon (;)', r'space ( )']
-    _CSV_SEPARATORS: Final[List[str]] = [',', '\t', ';', ' ']
+    LINE_ENDS: Final[list[str]] = [r'Line Feed (\n)', r'Carriage Return (\r)', r'CR+LF (\r\n)', r'LF+CR (\n\r)']
+    _LINE_ENDS: Final[list[str]] = ['\n', '\r', '\r\n', '\n\r']
+    CSV_SEPARATORS: Final[list[str]] = [r'comma (,)', r'tab (\t)', r'semicolon (;)', r'space ( )']
+    _CSV_SEPARATORS: Final[list[str]] = [',', '\t', ';', ' ']
 
     def __init__(self, *args: Any) -> None:
         super().__init__(*args)
-        self.check_items_names: List[str] = []
-        self.check_items_values: List[bool] = []
+        self.check_items_names: list[str] = []
+        self.check_items_values: list[bool] = []
 
-        self.line_colors: Dict[str, QtGui.QColor] = dict()
-        self.line_enabled: Dict[str, bool] = dict()
-        self.data_series_names: Dict[int, str] = dict()
+        self.line_colors: dict[str, QtGui.QColor] = dict()
+        self.line_enabled: dict[str, bool] = dict()
+        self.data_series_names: dict[int, str] = dict()
 
         self.beginGroup('plot')
         key: str
@@ -61,12 +63,10 @@ class Settings(QtCore.QSettings):
         super().sync()
 
     @property
-    def dialog(self) -> Dict[str,
-                             Union[
-                                 Dict[str, Tuple[str]],
-                                 Dict[str, Tuple[Path]],
-                                 Dict[str, Tuple[Sequence[str], Sequence[str], str]],
-                             ]]:
+    def dialog(self) -> dict[str,
+                             dict[str, tuple[str]] |
+                             dict[str, tuple[Path]] |
+                             dict[str, tuple[Sequence[str], Sequence[str], str]]]:
         return {
             self.tr('View'): {
                 self.tr('Translation file:'): ('translation_path',),

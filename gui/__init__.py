@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from typing import Set
+from __future__ import annotations
 
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
@@ -31,7 +31,7 @@ def run() -> None:
 
     app: QtWidgets.QApplication = QtWidgets.QApplication(sys.argv)
 
-    languages: Set[str] = set(QtCore.QLocale().uiLanguages() + [QtCore.QLocale().bcp47Name(), QtCore.QLocale().name()])
+    languages: set[str] = set(QtCore.QLocale().uiLanguages() + [QtCore.QLocale().bcp47Name(), QtCore.QLocale().name()])
     language: str
     qt_translator: QtCore.QTranslator = QtCore.QTranslator()
     for language in languages:

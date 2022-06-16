@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 from itertools import cycle
-from typing import Any, Iterable, List, Optional, Tuple, Union, cast
+from typing import Any, Iterable, Optional, cast
 
 import numpy as np
 import pyqtgraph as pg  # type: ignore
@@ -28,7 +30,7 @@ class Plot(QtWidgets.QWidget):
         layout: QtWidgets.QVBoxLayout = QtWidgets.QVBoxLayout(self)
 
         plot: pg.PlotWidget = pg.PlotWidget(self)
-        self.lines: List[pg.PlotDataItem] = []
+        self.lines: list[pg.PlotDataItem] = []
 
         cursor_balloon: pg.TextItem = pg.TextItem()
         plot.addItem(cursor_balloon, True)  # ignore bounds
@@ -56,7 +58,7 @@ class Plot(QtWidgets.QWidget):
             if not self.lines:
                 return
             line: pg.PlotDataItem
-            visible_data: List[NDArray[np.float64]] = []
+            visible_data: list[NDArray[np.float64]] = []
             x_min: float
             x_max: float
             y_min: float
@@ -126,7 +128,7 @@ class Plot(QtWidgets.QWidget):
         self.end_time.clearMinimumDateTime()
         self.end_time.clearMaximumDateTime()
 
-        def on_mouse_moved(event: Tuple[QtCore.QPointF]) -> None:
+        def on_mouse_moved(event: tuple[QtCore.QPointF]) -> None:
             pos: QtCore.QPointF = event[0]
             if plot.sceneBoundingRect().contains(pos):
                 point: QtCore.QPointF = self.canvas.vb.mapSceneToView(pos)
@@ -148,10 +150,10 @@ class Plot(QtWidgets.QWidget):
             else:
                 cursor_balloon.setVisible(False)
 
-        def on_lim_changed(arg: Tuple[pg.PlotWidget, List[List[float]]]) -> None:
-            rect: List[List[float]] = arg[1]
-            x_lim: List[float]
-            y_lim: List[float]
+        def on_lim_changed(arg: tuple[pg.PlotWidget, list[list[float]]]) -> None:
+            rect: list[list[float]] = arg[1]
+            x_lim: list[float]
+            y_lim: list[float]
             x_lim, y_lim = rect
             self.start_time.blockSignals(True)
             self.end_time.blockSignals(True)
@@ -263,7 +265,7 @@ class Plot(QtWidgets.QWidget):
         self.start_time.blockSignals(False)
 
         line: pg.PlotDataItem
-        good_lines: List[pg.PlotDataItem] = [line for line in self.lines
+        good_lines: list[pg.PlotDataItem] = [line for line in self.lines
                                              if (line.yData is not None
                                                  and line.yData.size
                                                  and not np.all(np.isnan(line.yData)))]
@@ -277,7 +279,7 @@ class Plot(QtWidgets.QWidget):
         self.time_span.setEnabled(bool(good_lines))
 
     def replot(self, index: int, data_model: DataModel, x_column_name: Optional[str], y_column_name: Optional[str], *,
-               color: Optional[Union[QtGui.QColor, QtGui.QPen]] = None, roll: bool = False) -> None:
+               color: Optional[QtGui.QColor | QtGui.QPen] = None, roll: bool = False) -> None:
         if x_column_name is None or y_column_name is None:
             return
 
@@ -306,5 +308,5 @@ class Plot(QtWidgets.QWidget):
         self.lines[index].setVisible(visible)
 
     @property
-    def view_range(self) -> List[List[float]]:
+    def view_range(self) -> list[list[float]]:
         return self.canvas.vb.viewRange()

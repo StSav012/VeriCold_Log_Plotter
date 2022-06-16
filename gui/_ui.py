@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
-from types import GeneratorType
-from typing import Callable, Dict, Final, Iterable, List, Optional, Sequence, TextIO, Tuple, Union, cast
+from typing import Callable, Final, Iterable, Optional, Sequence, TextIO, cast
 
 import numpy as np
 import pyqtgraph as pg  # type: ignore
@@ -40,7 +40,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.settings_layout: QtWidgets.QVBoxLayout = QtWidgets.QVBoxLayout(self.box_settings)
         self.layout_x_axis: QtWidgets.QFormLayout = QtWidgets.QFormLayout()
         self.combo_x_axis: pg.ComboBox = pg.ComboBox(self.box_settings)
-        self.combo_y_axis: List[PlotLineOptions] = [PlotLineOptions(items=[],
+        self.combo_y_axis: list[PlotLineOptions] = [PlotLineOptions(items=[],
                                                                     settings=self.settings,
                                                                     parent=self.dock_settings)
                                                     for _ in range(PLOT_LINES_COUNT)]
@@ -254,16 +254,16 @@ class MainWindow(QtWidgets.QMainWindow):
             translator.load(str(self.settings.translation_path))
             self.application.installTranslator(translator)
 
-    def load_file(self, file_name: Union[str, Iterable[str]],
+    def load_file(self, file_name: str | Iterable[str],
                   check_file_updates: bool = False) -> bool:
         if not file_name:
             return False
-        titles: List[str]
+        titles: list[str]
         data: NDArray[np.float64]
         if isinstance(file_name, (set, Sequence, Iterable)) and not isinstance(file_name, str):
-            all_titles: List[List[str]] = []
-            all_data: List[NDArray[np.float64]] = []
-            _file_names: Union[Iterable[str], GeneratorType] = file_name
+            all_titles: list[list[str]] = []
+            all_data: list[NDArray[np.float64]] = []
+            _file_names: Iterable[str] = file_name
             for file_name in _file_names:
                 try:
                     titles, data = parse(file_name)
@@ -315,7 +315,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle(f'{file_name} — {self._initial_window_title}')
         return True
 
-    def visible_data(self) -> Tuple[NDArray[np.float64], List[str]]:
+    def visible_data(self) -> tuple[NDArray[np.float64], list[str]]:
         o: PlotLineOptions
         header = [self.data_model.header[0]] + [o.option for o in self.combo_y_axis]
         h: str
@@ -329,7 +329,7 @@ class MainWindow(QtWidgets.QMainWindow):
         ((x_min, x_max), (y_min, y_max)) = self.plot.view_range
         data = data[..., ((data[0] >= x_min) & (data[0] <= x_max))]
         d: NDArray[np.float64]
-        somehow_visible_lines: List[bool] = [True] + [bool(np.any((d >= y_min) & (d <= y_max))) for d in data[1:]]
+        somehow_visible_lines: list[bool] = [True] + [bool(np.any((d >= y_min) & (d <= y_max))) for d in data[1:]]
         data = data[somehow_visible_lines]
         b: bool
         header = [h for h, b in zip(header, somehow_visible_lines) if b]
@@ -337,7 +337,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def save_csv(self, filename: str) -> bool:
         data: NDArray[np.float64] = self.data_model.data
-        header: List[str]
+        header: list[str]
         if self.export_all:
             header = self.data_model.header
         else:
@@ -370,7 +370,7 @@ class MainWindow(QtWidgets.QMainWindow):
             return False
 
         data: NDArray[np.float64] = self.data_model.data
-        header: List[str]
+        header: list[str]
         if self.export_all:
             header = self.data_model.header
         else:
@@ -418,8 +418,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.load_file(new_file_name)
 
     def export(self) -> None:
-        supported_formats: Dict[str, str] = {'.csv': f'{self.tr("Text with separators")} (*.csv)'}
-        supported_formats_callbacks: Dict[str, Callable[[str], bool]] = {'.csv': self.save_csv}
+        supported_formats: dict[str, str] = {'.csv': f'{self.tr("Text with separators")} (*.csv)'}
+        supported_formats_callbacks: dict[str, Callable[[str], bool]] = {'.csv': self.save_csv}
         try:
             import xlsxwriter
         except ImportError:
@@ -520,7 +520,7 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self.file_created = Path(self._opened_file_name).lstat().st_mtime
 
-        titles: List[str]
+        titles: list[str]
         data: NDArray[np.float64]
         try:
             titles, data = parse(self._opened_file_name)
