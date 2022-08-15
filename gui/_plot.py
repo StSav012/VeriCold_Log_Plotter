@@ -142,7 +142,11 @@ class Plot(QtWidgets.QWidget):
                 point: QtCore.QPointF = self.canvas.vb.mapSceneToView(pos)
                 if plot.visibleRange().contains(point):
                     cursor_balloon.setPos(point)
-                    cursor_balloon.setText(f'{datetime.fromtimestamp(round(point.x()))}\n{point.y()}')
+                    x: float = point.x()
+                    y: float = point.y()
+                    if self.canvas.axes['left']['item'].logMode:
+                        y = 10 ** y
+                    cursor_balloon.setText(f'{datetime.fromtimestamp(round(x))}\n{y}')
                     balloon_border: QtCore.QRectF = cursor_balloon.boundingRect()
                     sx: float
                     sy: float
@@ -303,6 +307,8 @@ class Plot(QtWidgets.QWidget):
                color: Optional[QtGui.QColor | QtGui.QPen] = None,
                roll: bool = False) -> None:
         if x_column_name is None or y_column_name is None:
+            return
+        if index >= len(self.lines):
             return
 
         if color is None:
