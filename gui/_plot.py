@@ -73,7 +73,7 @@ class Plot(QtWidgets.QWidget):
             y_max: float
             [[x_min, x_max], [y_min, y_max]] = self.canvas.vb.viewRange()
             for line in self.lines:
-                if line.yData is None or not line.yData.size:
+                if not line.isVisible() or line.yData is None or not line.yData.size:
                     continue
                 visible_data_piece: NDArray[np.float64] = line.yData[(line.xData >= x_min) & (line.xData <= x_max)]
                 if np.any((visible_data_piece >= y_min) & (visible_data_piece <= y_max)):
@@ -242,6 +242,12 @@ class Plot(QtWidgets.QWidget):
         if self.lines:
             self.clear()
 
+        visibility = list(visibility)
+        y_column_names = list(y_column_names)
+
+        if len(visibility) < len(y_column_names):
+            visibility += [True] * (len(y_column_names) - len(visibility))
+
         y_column_name: Optional[str]
         color: QtGui.QColor
         visible: bool
@@ -250,7 +256,7 @@ class Plot(QtWidgets.QWidget):
             x_column: int = data_model.header.index(x_column_name)
             for y_column_name, color, visible in zip(y_column_names,
                                                      cycle(colors or [pg.CONFIG_OPTIONS['foreground']]),
-                                                     cycle(visibility or [True])):
+                                                     visibility):
                 y_column: int = data_model.header.index(cast(str, y_column_name))  # no Nones here
                 self.lines.append(self.canvas.plot(
                     data_model[x_column],
@@ -262,7 +268,7 @@ class Plot(QtWidgets.QWidget):
         else:
             for y_column_name, color, visible in zip(y_column_names,
                                                      cycle(colors or [pg.CONFIG_OPTIONS['foreground']]),
-                                                     cycle(visibility or [True])):
+                                                     visibility):
                 self.lines.append(self.canvas.plot([], [], pen=color))
                 self.lines[-1].curve.opts['pen'].setCosmetic(True)
                 self.lines[-1].setVisible(visible)
@@ -278,8 +284,9 @@ class Plot(QtWidgets.QWidget):
         self.start_time.blockSignals(False)
 
         line: pg.PlotDataItem
-        good_lines: list[pg.PlotDataItem] = [line for line in self.lines
-                                             if (line.yData is not None
+        good_lines: list[pg.PlotDataItem] = [line for line, visible in zip(self.lines, visibility)
+                                             if (visible
+                                                 and line.yData is not None
                                                  and line.yData.size
                                                  and not np.all(np.isnan(line.yData)))]
         if good_lines:
