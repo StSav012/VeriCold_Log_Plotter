@@ -506,7 +506,15 @@ class MainWindow(QtWidgets.QMainWindow):
                          color=self.settings.line_colors.get(title, PlotLineOptions.DEFAULT_COLOR))
 
     def on_y_axis_mode_changed(self, new_index: int) -> None:
-        self.plot.canvas.setLogMode(y=(new_index == 2))
+        # PlotItem.setLogMode causes a crash here sometimes; the reason is unknown
+        log_mode_y: bool = (new_index == 2)
+        if self.plot.canvas.getAxis('left').logMode != log_mode_y:
+            for i in self.plot.canvas.items:
+                if hasattr(i, 'setLogMode'):
+                    i.setLogMode(False, log_mode_y)
+            self.plot.canvas.getAxis('left').setLogMode(log_mode_y)
+            self.plot.canvas.enableAutoRange()
+            self.plot.canvas.recomputeAverages()
 
         sender_index: int
         for sender_index in range(len(self.line_options_y_axis)):
