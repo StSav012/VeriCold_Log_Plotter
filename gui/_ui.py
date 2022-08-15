@@ -502,7 +502,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.settings.argument = new_text
 
     def on_y_axis_changed(self, sender_index: int, title: str) -> None:
-        self.plot.replot(sender_index, self.data_model, self.combo_x_axis.currentText(), title)
+        self.plot.replot(sender_index, self.data_model, self.combo_x_axis.currentText(), title,
+                         color=self.settings.line_colors.get(title, PlotLineOptions.DEFAULT_COLOR))
 
     def on_y_axis_mode_changed(self, new_index: int) -> None:
         self.plot.canvas.setLogMode(y=(new_index == 2))
