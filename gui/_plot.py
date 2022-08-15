@@ -62,28 +62,6 @@ class Plot(QtWidgets.QWidget):
         else:
             set_colors('w', 'k')
 
-        def auto_range_y() -> None:
-            if not self.lines:
-                return
-            line: pg.PlotDataItem
-            visible_data: list[NDArray[np.float64]] = []
-            x_min: float
-            x_max: float
-            y_min: float
-            y_max: float
-            [[x_min, x_max], [y_min, y_max]] = self.canvas.vb.viewRange()
-            for line in self.lines:
-                if not line.isVisible() or line.yData is None or not line.yData.size:
-                    continue
-                visible_data_piece: NDArray[np.float64] = line.yData[(line.xData >= x_min) & (line.xData <= x_max)]
-                if np.any((visible_data_piece >= y_min) & (visible_data_piece <= y_max)):
-                    visible_data.append(visible_data_piece)
-            if not visible_data:
-                return
-            min_y: float = min(np.nanmin(d) for d in visible_data)
-            max_y: float = max(np.nanmax(d) for d in visible_data)
-            self.canvas.vb.setYRange(min_y, max_y, padding=0.0)
-
         def on_view_all_triggered() -> None:
             if not self.lines:
                 return
@@ -94,7 +72,7 @@ class Plot(QtWidgets.QWidget):
             self.canvas.vb.setXRange(min_x, max_x, padding=0.0)
 
         self.canvas.autoBtn.clicked.disconnect(self.canvas.autoBtnClicked)
-        self.canvas.autoBtn.clicked.connect(auto_range_y)
+        self.canvas.autoBtn.clicked.connect(self.auto_range_y)
 
         menu_action: QtGui.QAction
         for menu_action in self.canvas.ctrlMenu.actions():
@@ -184,7 +162,7 @@ class Plot(QtWidgets.QWidget):
 
         def on_mouse_clicked(event: MouseClickEvent) -> None:
             if event.double():
-                auto_range_y()
+                self.auto_range_y()
             event.accept()
 
         self._mouse_moved_signal_proxy: pg.SignalProxy = pg.SignalProxy(plot.scene().sigMouseMoved,
@@ -235,6 +213,28 @@ class Plot(QtWidgets.QWidget):
         self.start_time.dateTimeChanged.connect(on_start_time_changed)
         self.end_time.dateTimeChanged.connect(on_end_time_changed)
         self.time_span.timeSpanChanged.connect(on_time_span_changed)
+
+    def auto_range_y(self) -> None:
+        if not self.lines:
+            return
+        line: pg.PlotDataItem
+        visible_data: list[NDArray[np.float64]] = []
+        x_min: float
+        x_max: float
+        y_min: float
+        y_max: float
+        [[x_min, x_max], [y_min, y_max]] = self.canvas.vb.viewRange()
+        for line in self.lines:
+            if not line.isVisible() or line.yData is None or not line.yData.size:
+                continue
+            visible_data_piece: NDArray[np.float64] = line.yData[(line.xData >= x_min) & (line.xData <= x_max)]
+            if np.any((visible_data_piece >= y_min) & (visible_data_piece <= y_max)):
+                visible_data.append(visible_data_piece)
+        if not visible_data:
+            return
+        min_y: float = min(np.nanmin(d) for d in visible_data)
+        max_y: float = max(np.nanmax(d) for d in visible_data)
+        self.canvas.vb.setYRange(min_y, max_y, padding=0.0)
 
     def clear(self) -> None:
         self.canvas.clearPlots()

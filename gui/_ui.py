@@ -495,15 +495,19 @@ class MainWindow(QtWidgets.QMainWindow):
         QtWidgets.QMessageBox.aboutQt(self)
 
     def on_x_axis_changed(self, new_text: str) -> None:
+        normalized: bool = (self.combo_y_axis.currentIndex() == 1)
         sender_index: int
         for sender_index in range(min(len(self.line_options_y_axis), len(self.plot.lines))):
             self.plot.replot(sender_index, self.data_model,
-                             new_text, self.line_options_y_axis[sender_index].option)
+                             new_text, self.line_options_y_axis[sender_index].option,
+                             normalized=normalized)
         self.settings.argument = new_text
 
     def on_y_axis_changed(self, sender_index: int, title: str) -> None:
+        normalized: bool = (self.combo_y_axis.currentIndex() == 1)
         self.plot.replot(sender_index, self.data_model, self.combo_x_axis.currentText(), title,
-                         color=self.settings.line_colors.get(title, PlotLineOptions.DEFAULT_COLOR))
+                         color=self.settings.line_colors.get(title, PlotLineOptions.DEFAULT_COLOR),
+                         normalized=normalized)
 
     def on_y_axis_mode_changed(self, new_index: int) -> None:
         # PlotItem.setLogMode causes a crash here sometimes; the reason is unknown
@@ -522,12 +526,14 @@ class MainWindow(QtWidgets.QMainWindow):
                              self.combo_x_axis.currentText(),
                              self.line_options_y_axis[sender_index].option,
                              normalized=(new_index == 1))
-        self.plot.canvas.vb.menu.viewAll.trigger()
+        self.plot.auto_range_y()
 
     def on_color_changed(self, sender_index: int, new_color: QtGui.QColor) -> None:
+        normalized: bool = (self.combo_y_axis.currentIndex() == 1)
         self.plot.replot(sender_index, self.data_model,
                          self.combo_x_axis.currentText(), self.line_options_y_axis[sender_index].option,
-                         color=new_color)
+                         color=new_color,
+                         normalized=normalized)
 
     def on_line_toggled(self, sender_index: int, new_state: bool) -> None:
         self.plot.set_line_visible(sender_index, new_state)
