@@ -20,8 +20,8 @@ _T = TypeVar('_T')
 
 
 def normalize(a: NDArray[_T]) -> NDArray[_T]:
-    min_a: _T = a.min()
-    max_a: _T = a.max()
+    min_a: _T = np.nanmin(a)
+    max_a: _T = np.nanmax(a)
     return (a - min_a) / (max_a - min_a)
 
 
