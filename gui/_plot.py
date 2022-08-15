@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from itertools import cycle
-from typing import Any, Iterable, Optional, cast
+from typing import Any, Iterable, Optional, TypeVar, cast
 
 import numpy as np
 import pyqtgraph as pg  # type: ignore
@@ -15,6 +15,14 @@ __all__ = ['Plot']
 
 from gui._data_model import DataModel
 from gui._time_span_edit import TimeSpanEdit
+
+_T = TypeVar('_T')
+
+
+def normalize(a: NDArray[_T]) -> NDArray[_T]:
+    min_a: _T = a.min()
+    max_a: _T = a.max()
+    return (a - min_a) / (max_a - min_a)
 
 
 class Plot(QtWidgets.QWidget):
@@ -228,7 +236,9 @@ class Plot(QtWidgets.QWidget):
         self.canvas.clearPlots()
 
     def plot(self, data_model: DataModel, x_column_name: Optional[str], y_column_names: Iterable[Optional[str]], *,
-             colors: Iterable[QtGui.QColor] = (), visibility: Iterable[bool] = ()) -> None:
+             normalized: bool = False,
+             colors: Iterable[QtGui.QColor] = (),
+             visibility: Iterable[bool] = ()) -> None:
         if self.lines:
             self.clear()
 
@@ -242,7 +252,10 @@ class Plot(QtWidgets.QWidget):
                                                      cycle(colors or [pg.CONFIG_OPTIONS['foreground']]),
                                                      cycle(visibility or [True])):
                 y_column: int = data_model.header.index(cast(str, y_column_name))  # no Nones here
-                self.lines.append(self.canvas.plot(data_model[x_column], data_model[y_column], pen=color))
+                self.lines.append(self.canvas.plot(
+                    data_model[x_column],
+                    normalize(data_model[y_column]) if normalized else data_model[y_column],
+                    pen=color))
                 self.lines[-1].curve.opts['pen'].setCosmetic(True)
                 self.lines[-1].setVisible(visible)
             self.canvas.vb.setXRange(data_model[x_column][0], data_model[x_column][-1], padding=0.0)
@@ -279,7 +292,9 @@ class Plot(QtWidgets.QWidget):
         self.time_span.setEnabled(bool(good_lines))
 
     def replot(self, index: int, data_model: DataModel, x_column_name: Optional[str], y_column_name: Optional[str], *,
-               color: Optional[QtGui.QColor | QtGui.QPen] = None, roll: bool = False) -> None:
+               normalized: bool = False,
+               color: Optional[QtGui.QColor | QtGui.QPen] = None,
+               roll: bool = False) -> None:
         if x_column_name is None or y_column_name is None:
             return
 
@@ -302,7 +317,9 @@ class Plot(QtWidgets.QWidget):
             self.canvas.vb.setXRange(min(x_axis.range) + shift, max(x_axis.range) + shift, padding=0.0)
             self._last_time_range_rolled = datetime.now()
 
-        self.lines[index].setData(data_model[x_column], data_model[y_column], pen=color)
+        self.lines[index].setData(data_model[x_column],
+                                  normalize(data_model[y_column]) if normalized else data_model[y_column],
+                                  pen=color)
 
     def set_line_visible(self, index: int, visible: bool) -> None:
         self.lines[index].setVisible(visible)

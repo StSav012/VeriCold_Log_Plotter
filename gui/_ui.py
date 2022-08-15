@@ -40,10 +40,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.settings_layout: QtWidgets.QVBoxLayout = QtWidgets.QVBoxLayout(self.box_settings)
         self.layout_x_axis: QtWidgets.QFormLayout = QtWidgets.QFormLayout()
         self.combo_x_axis: pg.ComboBox = pg.ComboBox(self.box_settings)
-        self.combo_y_axis: list[PlotLineOptions] = [PlotLineOptions(items=[],
-                                                                    settings=self.settings,
-                                                                    parent=self.dock_settings)
-                                                    for _ in range(PLOT_LINES_COUNT)]
+        self.combo_y_axis: pg.ComboBox = pg.ComboBox(self.box_settings)
+        self.line_options_y_axis: list[PlotLineOptions] = [PlotLineOptions(items=[],
+                                                                           settings=self.settings,
+                                                                           parent=self.dock_settings)
+                                                           for _ in range(PLOT_LINES_COUNT)]
 
         self.data_model: DataModel = DataModel()
         self.plot: Plot = Plot(self)
@@ -180,9 +181,10 @@ class MainWindow(QtWidgets.QMainWindow):
                                             & ~self.dock_settings.DockWidgetFeature.DockWidgetClosable))
         self.dock_settings.setWidget(self.box_settings)
         self.layout_x_axis.addRow(self.tr('x-axis:'), self.combo_x_axis)
+        self.layout_x_axis.addRow(self.tr('y-axis:'), self.combo_y_axis)
         self.settings_layout.addLayout(self.layout_x_axis)
         cb: PlotLineOptions
-        for cb in self.combo_y_axis:
+        for cb in self.line_options_y_axis:
             self.settings_layout.addWidget(cb)
         self.addDockWidget(QtCore.Qt.DockWidgetArea.RightDockWidgetArea, self.dock_settings)
 
@@ -203,7 +205,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.load_settings()
 
         self.combo_x_axis.currentTextChanged.connect(self.on_x_axis_changed)
-        for cb in self.combo_y_axis:
+        self.combo_y_axis.setItems((self.tr('absolute'), self.tr('relative'), self.tr('logarithmic')))
+        self.combo_y_axis.currentIndexChanged.connect(self.on_y_axis_mode_changed)
+        for cb in self.line_options_y_axis:
             cb.itemChanged.connect(self.on_y_axis_changed)
             cb.colorChanged.connect(self.on_color_changed)
             cb.toggled.connect(self.on_line_toggled)
@@ -297,14 +301,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.combo_x_axis.blockSignals(False)
 
         cb: PlotLineOptions
-        for cb in self.combo_y_axis:
+        for cb in self.line_options_y_axis:
             cb.set_items(tuple(filter(lambda t: not (t.endswith('(secs)') or t.endswith('(s)')),
                                       self.data_model.header)))
         self.plot.plot(self.data_model,
                        self.combo_x_axis.value(),
-                       (cb.option for cb in self.combo_y_axis),
-                       colors=(cb.color for cb in self.combo_y_axis),
-                       visibility=(cb.checked for cb in self.combo_y_axis))
+                       (cb.option for cb in self.line_options_y_axis),
+                       colors=(cb.color for cb in self.line_options_y_axis),
+                       visibility=(cb.checked for cb in self.line_options_y_axis))
         self.action_export.setEnabled(True)
         self.action_export_visible.setEnabled(True)
         self.action_reload.setEnabled(True)
@@ -317,7 +321,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def visible_data(self) -> tuple[NDArray[np.float64], list[str]]:
         o: PlotLineOptions
-        header = [self.data_model.header[0]] + [o.option for o in self.combo_y_axis]
+        header = [self.data_model.header[0]] + [o.option for o in self.line_options_y_axis]
         h: str
         data = self.data_model.data[[self.data_model.header.index(h) for h in header]]
 
@@ -492,17 +496,28 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def on_x_axis_changed(self, new_text: str) -> None:
         sender_index: int
-        for sender_index in range(min(len(self.combo_y_axis), len(self.plot.lines))):
+        for sender_index in range(min(len(self.line_options_y_axis), len(self.plot.lines))):
             self.plot.replot(sender_index, self.data_model,
-                             new_text, self.combo_y_axis[sender_index].option)
+                             new_text, self.line_options_y_axis[sender_index].option)
         self.settings.argument = new_text
 
     def on_y_axis_changed(self, sender_index: int, title: str) -> None:
         self.plot.replot(sender_index, self.data_model, self.combo_x_axis.currentText(), title)
 
+    def on_y_axis_mode_changed(self, new_index: int) -> None:
+        self.plot.canvas.setLogMode(y=(new_index == 2))
+
+        sender_index: int
+        for sender_index in range(len(self.line_options_y_axis)):
+            self.plot.replot(sender_index, self.data_model,
+                             self.combo_x_axis.currentText(),
+                             self.line_options_y_axis[sender_index].option,
+                             normalized=(new_index == 1))
+        self.plot.canvas.vb.menu.viewAll.trigger()
+
     def on_color_changed(self, sender_index: int, new_color: QtGui.QColor) -> None:
         self.plot.replot(sender_index, self.data_model,
-                         self.combo_x_axis.currentText(), self.combo_y_axis[sender_index].option,
+                         self.combo_x_axis.currentText(), self.line_options_y_axis[sender_index].option,
                          color=new_color)
 
     def on_line_toggled(self, sender_index: int, new_state: bool) -> None:
@@ -530,9 +545,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.data_model.set_data(data, titles)
 
             sender_index: int
-            for sender_index in range(min(len(self.combo_y_axis), len(self.plot.lines))):
+            for sender_index in range(min(len(self.line_options_y_axis), len(self.plot.lines))):
                 self.plot.replot(sender_index, self.data_model,
-                                 self.combo_x_axis.currentText(), self.combo_y_axis[sender_index].option,
+                                 self.combo_x_axis.currentText(), self.line_options_y_axis[sender_index].option,
                                  roll=True)
 
             self.status_bar.showMessage(self.tr('Reloaded {0}')
