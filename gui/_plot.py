@@ -86,7 +86,6 @@ class Plot(QtWidgets.QWidget):
 
         self.canvas.vb.disableAutoRange()
         self.canvas.vb.setAutoVisible(x=True, y=True)
-        self.canvas.vb.setMouseMode(pg.ViewBox.RectMode)
         self.canvas.vb.setDefaultPadding(0.0)
         self.canvas.vb.menu.axes[0].deleteLater()
         self.canvas.vb.menu.ctrl[1].invertCheck.hide()
@@ -340,3 +339,13 @@ class Plot(QtWidgets.QWidget):
     @property
     def view_range(self) -> list[list[float]]:
         return self.canvas.vb.viewRange()
+
+    @property
+    def mouse_mode(self) -> int:
+        return self.canvas.vb.state['mouseMode']
+
+    @mouse_mode.setter
+    def mouse_mode(self, new_value: int) -> None:
+        if new_value not in (pg.ViewBox.RectMode, pg.ViewBox.PanMode):
+            raise ValueError('Invalid mouse mode')
+        self.canvas.vb.setMouseMode(new_value)

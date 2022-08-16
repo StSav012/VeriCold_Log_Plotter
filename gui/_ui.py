@@ -240,6 +240,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.restoreState(cast(QtCore.QByteArray, self.settings.value('state', QtCore.QByteArray())))
         self.settings.endGroup()
 
+        self.settings.beginGroup('plot')
+        self.plot.mouse_mode = cast(int, self.settings.value('mouseMode', pg.ViewBox.PanMode, int))
+        self.settings.endGroup()
+
     def save_settings(self) -> None:
         self.settings.beginGroup('location')
         self.settings.setValue('open', self._opened_file_name)
@@ -250,6 +254,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.settings.setValue('geometry', self.saveGeometry())
         self.settings.setValue('state', self.saveState())
         self.settings.endGroup()
+
+        self.settings.beginGroup('plot')
+        self.settings.setValue('mouseMode', self.plot.mouse_mode)
+        self.settings.endGroup()
+
         self.settings.sync()
 
     def install_translation(self) -> None:
