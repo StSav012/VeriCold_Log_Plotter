@@ -11,6 +11,7 @@ from numpy.typing import NDArray
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 from gui._data_model import DataModel
+from gui._menu_bar import MenuBar
 from gui._plot import Plot
 from gui._plot_line_options import PlotLineOptions
 from gui._preferences import Preferences
@@ -48,18 +49,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.plot: Plot = Plot(self)
 
         self.export_all: bool = True
-        self.menu_bar: QtWidgets.QMenuBar = QtWidgets.QMenuBar(self)
-        self.menu_file: QtWidgets.QMenu = QtWidgets.QMenu(self.menu_bar)
-        self.menu_about: QtWidgets.QMenu = QtWidgets.QMenu(self.menu_bar)
-        self.action_open: QtGui.QAction = QtGui.QAction(self)
-        self.action_export: QtGui.QAction = QtGui.QAction(self)
-        self.action_export_visible: QtGui.QAction = QtGui.QAction(self)
-        self.action_reload: QtGui.QAction = QtGui.QAction(self)
-        self.action_auto_reload: QtGui.QAction = QtGui.QAction(self)
-        self.action_preferences: QtGui.QAction = QtGui.QAction(self)
-        self.action_quit: QtGui.QAction = QtGui.QAction(self)
-        self.action_about: QtGui.QAction = QtGui.QAction(self)
-        self.action_about_qt: QtGui.QAction = QtGui.QAction(self)
+        self.menu_bar: MenuBar = MenuBar(self)
 
         self.status_bar: QtWidgets.QStatusBar = QtWidgets.QStatusBar(self)
 
@@ -96,81 +86,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.main_layout.setObjectName('main_layout')
         self.main_layout.addWidget(self.plot)
         self.setCentralWidget(self.central_widget)
-        self.menu_bar.setGeometry(QtCore.QRect(0, 0, 800, 29))
-        self.menu_bar.setObjectName('menu_bar')
-        self.menu_file.setObjectName('menu_file')
-        self.menu_about.setObjectName('menu_about')
         self.setMenuBar(self.menu_bar)
         self.status_bar.setObjectName('status_bar')
         self.setStatusBar(self.status_bar)
-        self.action_open.setIcon(
-            QtGui.QIcon.fromTheme('document-open',
-                                  self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_DialogOpenButton)))
-        self.action_open.setObjectName('action_open')
-        self.action_export.setIcon(QtGui.QIcon.fromTheme('document-save-as'))
-        self.action_export.setObjectName('action_export')
-        self.action_export_visible.setIcon(QtGui.QIcon.fromTheme('document-save-as'))
-        self.action_export_visible.setObjectName('action_export_visible')
-        self.action_reload.setIcon(
-            QtGui.QIcon.fromTheme('view-refresh',
-                                  self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_BrowserReload)))
-        self.action_reload.setObjectName('action_reload')
-        self.action_auto_reload.setObjectName('action_auto_reload')
-        self.action_preferences.setMenuRole(QtGui.QAction.MenuRole.PreferencesRole)
-        self.action_preferences.setObjectName('action_preferences')
-        self.action_quit.setIcon(
-            QtGui.QIcon.fromTheme('application-exit',
-                                  self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_DialogCloseButton)))
-        self.action_quit.setMenuRole(QtGui.QAction.MenuRole.QuitRole)
-        self.action_quit.setObjectName('action_quit')
-        self.action_about.setIcon(
-            QtGui.QIcon.fromTheme('help-about',
-                                  self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_DialogHelpButton)))
-        self.action_about.setMenuRole(QtGui.QAction.MenuRole.AboutRole)
-        self.action_about.setObjectName('action_about')
-        self.action_about_qt.setIcon(
-            QtGui.QIcon.fromTheme('help-about-qt',
-                                  QtGui.QIcon(':/qt-project.org/q''messagebox/images/qt''logo-64.png')))
-        self.action_about_qt.setMenuRole(QtGui.QAction.MenuRole.AboutQtRole)
-        self.action_about_qt.setObjectName('action_about_qt')
-        self.menu_file.addAction(self.action_open)
-        self.menu_file.addAction(self.action_export)
-        self.menu_file.addAction(self.action_export_visible)
-        self.menu_file.addAction(self.action_reload)
-        self.menu_file.addAction(self.action_auto_reload)
-        self.menu_file.addSeparator()
-        self.menu_file.addAction(self.action_preferences)
-        self.menu_file.addSeparator()
-        self.menu_file.addAction(self.action_quit)
-        self.menu_about.addAction(self.action_about)
-        self.menu_about.addAction(self.action_about_qt)
-        self.menu_bar.addAction(self.menu_file.menuAction())
-        self.menu_bar.addAction(self.menu_about.menuAction())
 
-        self.action_export.setEnabled(False)
-        self.action_export_visible.setEnabled(False)
-        self.action_reload.setEnabled(False)
-        self.action_auto_reload.setEnabled(False)
-        self.action_auto_reload.setCheckable(True)
-
-        self.action_open.setShortcut(QtGui.QKeySequence('Ctrl+O'))
-        self.action_export.setShortcuts((QtGui.QKeySequence('Ctrl+S'), QtGui.QKeySequence('Ctrl+E')))
-        self.action_export_visible.setShortcuts((QtGui.QKeySequence('Shift+Ctrl+S'),
-                                                 QtGui.QKeySequence('Shift+Ctrl+E')))
-        self.action_reload.setShortcuts((QtGui.QKeySequence('Ctrl+R'), QtGui.QKeySequence('F5')))
-        self.action_preferences.setShortcut(QtGui.QKeySequence('Ctrl+,'))
-        self.action_quit.setShortcuts((QtGui.QKeySequence('Ctrl+Q'), QtGui.QKeySequence('Ctrl+X')))
-        self.action_about.setShortcut(QtGui.QKeySequence('F1'))
-
-        self.action_open.triggered.connect(self.on_action_open_triggered)
-        self.action_export.triggered.connect(self.on_action_export_triggered)
-        self.action_export_visible.triggered.connect(self.on_action_export_visible_triggered)
-        self.action_reload.triggered.connect(self.on_action_reload_triggered)
-        self.action_auto_reload.toggled.connect(self.on_action_auto_reload_toggled)
-        self.action_preferences.triggered.connect(self.on_action_preferences_triggered)
-        self.action_quit.triggered.connect(self.on_action_quit_triggered)
-        self.action_about.triggered.connect(self.on_action_about_triggered)
-        self.action_about_qt.triggered.connect(self.on_action_about_qt_triggered)
+        self.menu_bar.action_open.triggered.connect(self.on_action_open_triggered)
+        self.menu_bar.action_export.triggered.connect(self.on_action_export_triggered)
+        self.menu_bar.action_export_visible.triggered.connect(self.on_action_export_visible_triggered)
+        self.menu_bar.action_reload.triggered.connect(self.on_action_reload_triggered)
+        self.menu_bar.action_auto_reload.toggled.connect(self.on_action_auto_reload_toggled)
+        self.menu_bar.action_preferences.triggered.connect(self.on_action_preferences_triggered)
+        self.menu_bar.action_quit.triggered.connect(self.on_action_quit_triggered)
 
         self.dock_settings.setObjectName('dock_settings')
         self.dock_settings.setAllowedAreas(QtCore.Qt.DockWidgetArea.AllDockWidgetAreas)
@@ -187,17 +113,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.addDockWidget(QtCore.Qt.DockWidgetArea.RightDockWidgetArea, self.dock_settings)
 
         self.setWindowTitle(self._initial_window_title)
-        self.menu_file.setTitle(self.tr('File'))
-        self.menu_about.setTitle(self.tr('About'))
-        self.action_open.setText(self.tr('Open...'))
-        self.action_export.setText(self.tr('Export...'))
-        self.action_export_visible.setText(self.tr('Export Visible...'))
-        self.action_reload.setText(self.tr('Reload'))
-        self.action_auto_reload.setText(self.tr('Auto Reload'))
-        self.action_preferences.setText(self.tr('Preferences...'))
-        self.action_quit.setText(self.tr('Quit'))
-        self.action_about.setText(self.tr('About'))
-        self.action_about_qt.setText(self.tr('About QtCore.Qt'))
         self.dock_settings.setWindowTitle(self.tr('Options'))
 
         self.load_settings()
@@ -316,10 +231,10 @@ class MainWindow(QtWidgets.QMainWindow):
                        (cb.option for cb in self.line_options_y_axis),
                        colors=(cb.color for cb in self.line_options_y_axis),
                        visibility=(cb.checked for cb in self.line_options_y_axis))
-        self.action_export.setEnabled(True)
-        self.action_export_visible.setEnabled(True)
-        self.action_reload.setEnabled(True)
-        self.action_auto_reload.setEnabled(True)
+        self.menu_bar.action_export.setEnabled(True)
+        self.menu_bar.action_export_visible.setEnabled(True)
+        self.menu_bar.action_reload.setEnabled(True)
+        self.menu_bar.action_auto_reload.setEnabled(True)
         self.status_bar.showMessage(self.tr('Ready'))
         self.file_created = Path(self._opened_file_name).lstat().st_mtime
         self.check_file_updates = check_file_updates
@@ -418,7 +333,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @check_file_updates.setter
     def check_file_updates(self, new_value: bool) -> None:
-        self.action_auto_reload.setChecked(new_value)
+        self.menu_bar.action_auto_reload.setChecked(new_value)
 
     def on_action_open_triggered(self) -> None:
         new_file_name: str
@@ -483,23 +398,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def on_action_quit_triggered(self) -> None:
         self.close()
-
-    def on_action_about_triggered(self) -> None:
-        QtWidgets.QMessageBox.about(self,
-                                    self.tr("About VeriCold Log Plotter"),
-                                    "<html><p>"
-                                    + self.tr("VeriCold logfiles are created by Oxford Instruments plc.")
-                                    + "</p><br><p>"
-                                    + self.tr("VeriCold Log Plotter is licensed under the {0}.")
-                                    .format("<a href='https://www.gnu.org/copyleft/lesser.html'>{0}</a>"
-                                            .format(self.tr("GNU LGPL version 3")))
-                                    + "</p><p>"
-                                    + self.tr("The source code is available on {0}.").format(
-                                        "<a href='https://github.com/StSav012/VeriCold_Log_Plotter'>GitHub</a>")
-                                    + "</p></html>")
-
-    def on_action_about_qt_triggered(self) -> None:
-        QtWidgets.QMessageBox.aboutQt(self)
 
     def on_x_axis_changed(self, new_text: str) -> None:
         normalized: bool = (self.combo_y_axis.currentIndex() == 1)
