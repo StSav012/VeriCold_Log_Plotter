@@ -24,12 +24,10 @@ class MainWindow(QtWidgets.QMainWindow):
     _initial_window_title: Final[str] = QtWidgets.QApplication.translate('initial main window title',
                                                                          'VeriCold Plotter')
 
-    def __init__(self, application: Optional[QtWidgets.QApplication] = None,
-                 parent: Optional[QtWidgets.QWidget] = None) -> None:
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent=parent)
 
         self.settings: Settings = Settings('SavSoft', 'VeriCold Plotter', self)
-        self.application: Optional[QtWidgets.QApplication] = application
         self.install_translation()
 
         self.central_widget: QtWidgets.QWidget = QtWidgets.QWidget(self)
@@ -262,10 +260,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.settings.sync()
 
     def install_translation(self) -> None:
-        if self.application is not None and self.settings.translation_path is not None:
+        if self.settings.translation_path is not None:
             translator: QtCore.QTranslator = QtCore.QTranslator(self)
             translator.load(str(self.settings.translation_path))
-            self.application.installTranslator(translator)
+            QtWidgets.QApplication.instance().installTranslator(translator)
 
     def load_file(self, file_name: str | Iterable[str],
                   check_file_updates: bool = False) -> bool:

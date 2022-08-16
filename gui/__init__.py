@@ -46,7 +46,7 @@ def run() -> None:
             app.installTranslator(qtbase_translator)
             break
 
-    window: MainWindow = MainWindow(application=app)
+    window: MainWindow = MainWindow()
     # if a command line argument starts with `-check`, enable the auto-reload timer
     index: int
     argv: str
