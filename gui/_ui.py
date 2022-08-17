@@ -313,12 +313,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 worksheet.set_cell_value(1, col + 1, header[col])
                 if header[col].endswith(('(s)', '(secs)')):
                     for row in range(data.shape[1]):
-                        worksheet.set_cell_value(row + 1, col + 1, datetime.fromtimestamp(data[col, row]))
-                        worksheet.set_cell_style(row + 1, col + 1, datetime_style)
+                        worksheet.set_cell_value(row + 2, col + 1, datetime.fromtimestamp(data[col, row]))
+                        worksheet.set_cell_style(row + 2, col + 1, datetime_style)
                 else:
                     for row in range(data.shape[1]):
-                        worksheet.set_cell_value(row + 1, col + 1, data[col, row])
-                        worksheet.set_cell_style(row + 1, col + 1, auto_size_style)
+                        worksheet.set_cell_value(row + 2, col + 1, data[col, row])
+                        worksheet.set_cell_style(row + 2, col + 1, auto_size_style)
             worksheet.set_row_style(1, header_style)
             workbook.save(filename)
         except IOError as ex:
