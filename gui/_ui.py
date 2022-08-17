@@ -422,7 +422,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 if hasattr(i, 'setLogMode'):
                     i.setLogMode(False, log_mode_y)
             self.plot.canvas.getAxis('left').setLogMode(log_mode_y)
-            self.plot.canvas.enableAutoRange()
+            self.plot.canvas.vb.enableAutoRange()
             self.plot.canvas.recomputeAverages()
 
         sender_index: int
