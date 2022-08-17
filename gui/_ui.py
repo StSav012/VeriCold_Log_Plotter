@@ -292,6 +292,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.status_bar.showMessage(' '.join(repr(a) for a in ex.args))
             return False
 
+        if not Path(filename).suffix.casefold() == '.xlsx':
+            filename += '.xlsx'
+
         data: NDArray[np.float64] = self.data_model.data
         header: list[str]
         if self.export_all:
@@ -364,7 +367,7 @@ class MainWindow(QtWidgets.QMainWindow):
         new_file_name, new_file_name_filter = QtWidgets.QFileDialog.getSaveFileName(
             self, self.tr('Export'),
             str(Path(self._exported_file_name or self._opened_file_name)
-                .with_name(Path(self._opened_file_name).name)),
+                .with_name(Path(self._opened_file_name).name).with_suffix('')),
             ';;'.join(supported_formats.values()),
             selected_filter,
         )
