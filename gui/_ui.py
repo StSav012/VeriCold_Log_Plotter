@@ -287,10 +287,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def save_xlsx(self, filename: str) -> bool:
         try:
-            import xlsxwriter  # type: ignore
-            from xlsxwriter import Workbook
-            from xlsxwriter.format import Format  # type: ignore
-            from xlsxwriter.worksheet import Worksheet  # type: ignore
+            from pyexcelerate import Font, Format, Panes, Style, Workbook, Worksheet
         except ImportError as ex:
             self.status_bar.showMessage(' '.join(repr(a) for a in ex.args))
             return False
@@ -302,23 +299,28 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             data, header = self.visible_data()
         try:
-            workbook: Workbook = Workbook(filename,
-                                          {'default_date_format': 'dd.mm.yyyy hh:mm:ss',
-                                           'nan_inf_to_errors': True})
-            header_format: Format = workbook.add_format({'bold': True})
-            worksheet: Worksheet = workbook.add_worksheet(str(Path(self._opened_file_name).with_suffix('').name))
-            worksheet.freeze_panes(1, 0)  # freeze first row
+            workbook: Workbook = Workbook()
+            worksheet: Worksheet = workbook.new_sheet(str(Path(self._opened_file_name).with_suffix('').name))
+            worksheet.panes = Panes(y=1)  # freeze first row
+
+            header_style: Style = Style(font=Font(bold=True))
+            datetime_style: Style = Style(format=Format('yyyy-mm-dd hh:mm:ss'), size=-1)
+            auto_size_style: Style = Style(size=-1)
+
             col: int
             row: int
             for col in range(data.shape[0]):
-                worksheet.write_string(0, col, header[col], header_format)
+                worksheet.set_cell_value(1, col + 1, header[col])
                 if header[col].endswith(('(s)', '(secs)')):
                     for row in range(data.shape[1]):
-                        worksheet.write_datetime(row + 1, col, datetime.fromtimestamp(data[col, row]))
+                        worksheet.set_cell_value(row + 1, col + 1, datetime.fromtimestamp(data[col, row]))
+                        worksheet.set_cell_style(row + 1, col + 1, datetime_style)
                 else:
                     for row in range(data.shape[1]):
-                        worksheet.write_number(row + 1, col, data[col, row])
-            workbook.close()
+                        worksheet.set_cell_value(row + 1, col + 1, data[col, row])
+                        worksheet.set_cell_style(row + 1, col + 1, auto_size_style)
+            worksheet.set_row_style(1, header_style)
+            workbook.save(filename)
         except IOError as ex:
             self.status_bar.showMessage(' '.join(ex.args))
             return False
@@ -344,13 +346,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.load_file(new_file_name)
 
     def export(self) -> None:
+        import importlib.util
+
         supported_formats: dict[str, str] = {'.csv': f'{self.tr("Text with separators")} (*.csv)'}
         supported_formats_callbacks: dict[str, Callable[[str], bool]] = {'.csv': self.save_csv}
-        try:
-            import xlsxwriter
-        except ImportError:
-            pass
-        else:
+        if importlib.util.find_spec('pyexcelerate') is not None:
             supported_formats['.xlsx'] = f'{self.tr("Microsoft Excel")} (*.xlsx)'
             supported_formats_callbacks['.xlsx'] = self.save_xlsx
         selected_filter: str = ''
