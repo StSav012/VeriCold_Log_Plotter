@@ -341,12 +341,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.menu_bar.action_auto_reload.setChecked(new_value)
 
     def on_action_open_triggered(self) -> None:
-        new_file_name: str
-        new_file_name, _ = QtWidgets.QFileDialog.getOpenFileName(
+        new_file_names: list[str]
+        new_file_names, _ = QtWidgets.QFileDialog.getOpenFileNames(
             self, self.tr('Open'),
             self._opened_file_name,
             f'{self.tr("VeriCold data logfile")} (*.vcl);;{self.tr("All Files")} (*.*)')
-        self.load_file(new_file_name)
+        self.load_file(new_file_names)
 
     def export(self) -> None:
         import importlib.util
