@@ -225,8 +225,15 @@ class Plot(QtWidgets.QWidget):
                 visible_data.append(visible_data_piece)
         if not visible_data:
             return
-        min_y: float = min(np.nanmin(d) for d in visible_data)
-        max_y: float = max(np.nanmax(d) for d in visible_data)
+        min_y: float
+        max_y: float
+        if self.canvas.axes['left']['item'].logMode:
+            positive_data: list[NDArray[np.float64]] = [d[d > 0] for d in visible_data]
+            min_y = np.log10(min(cast(float, np.nanmin(d)) for d in positive_data))
+            max_y = np.log10(max(cast(float, np.nanmax(d)) for d in positive_data))
+        else:
+            min_y = min(cast(float, np.nanmin(d)) for d in visible_data)
+            max_y = max(cast(float, np.nanmax(d)) for d in visible_data)
         self.canvas.vb.setYRange(min_y, max_y, padding=0.0)
 
     def clear(self) -> None:
@@ -269,16 +276,12 @@ class Plot(QtWidgets.QWidget):
                 self.lines.append(self.canvas.plot([], [], pen=color))
                 self.lines[-1].curve.opts['pen'].setCosmetic(True)
                 self.lines[-1].setVisible(visible)
-
-        self.start_time.blockSignals(True)
-        self.end_time.blockSignals(True)
-        self.time_span.blockSignals(True)
-        self.start_time.setDateTime(self.start_time.minimumDateTime())
-        self.end_time.setDateTime(self.end_time.maximumDateTime())
-        self.time_span.from_two_q_date_time(self.start_time.dateTime(), self.end_time.dateTime())
-        self.time_span.blockSignals(False)
-        self.end_time.blockSignals(False)
-        self.start_time.blockSignals(False)
+        # restore log state if set
+        log_mode_y: bool = self.canvas.getAxis('left').logMode
+        if log_mode_y:
+            for i in self.canvas.items:
+                if hasattr(i, 'setLogMode'):
+                    i.setLogMode(False, log_mode_y)
 
         line: pg.PlotDataItem
         good_lines: list[pg.PlotDataItem] = [line for line, visible in zip(self.lines, visibility)
@@ -287,8 +290,16 @@ class Plot(QtWidgets.QWidget):
                                                  and line.yData.size
                                                  and not np.all(np.isnan(line.yData)))]
         if good_lines:
-            min_y: float = min(cast(float, np.nanmin(line.yData)) for line in good_lines)
-            max_y: float = max(cast(float, np.nanmax(line.yData)) for line in good_lines)
+            data: list[NDArray[np.float64]] = [line.yData for line in good_lines]
+            min_y: float
+            max_y: float
+            if self.canvas.axes['left']['item'].logMode:
+                positive_data: list[NDArray[np.float64]] = [d[d > 0] for d in data]
+                min_y = np.log10(min(cast(float, np.nanmin(d)) for d in positive_data))
+                max_y = np.log10(max(cast(float, np.nanmax(d)) for d in positive_data))
+            else:
+                min_y = min(cast(float, np.nanmin(d)) for d in data)
+                max_y = max(cast(float, np.nanmax(d)) for d in data)
             self.canvas.vb.setYRange(min_y, max_y, padding=0.0)
 
         self.start_time.setEnabled(bool(good_lines))
