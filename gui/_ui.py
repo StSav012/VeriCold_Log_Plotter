@@ -351,10 +351,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def export(self) -> None:
         import importlib.util
 
-        supported_formats: dict[str, str] = {'.csv': f'{self.tr("Text with separators")} (*.csv)'}
+        supported_formats: dict[str, str] = {'.csv': f'{self.tr("Text with separators")}(*.csv)'}
         supported_formats_callbacks: dict[str, Callable[[str], bool]] = {'.csv': self.save_csv}
         if importlib.util.find_spec('pyexcelerate') is not None:
-            supported_formats['.xlsx'] = f'{self.tr("Microsoft Excel")} (*.xlsx)'
+            supported_formats['.xlsx'] = f'{self.tr("Microsoft Excel")}(*.xlsx)'
             supported_formats_callbacks['.xlsx'] = self.save_xlsx
         selected_filter: str = ''
         if self._exported_file_name:
