@@ -76,22 +76,14 @@ class Plot(QtWidgets.QWidget):
 
         menu_action: QtGui.QAction
         for menu_action in self.canvas.ctrlMenu.actions():
-            if menu_action.text() in [
+            if menu_action.text() not in [
                 QtCore.QCoreApplication.translate('PlotItem', 'Grid'),
             ]:
-                self.canvas.vb.menu.addAction(menu_action)
-            else:
                 menu_action.deleteLater()
-        self.canvas.ctrlMenu = None
 
         self.canvas.vb.disableAutoRange()
         self.canvas.vb.setAutoVisible(x=True, y=True)
         self.canvas.vb.setDefaultPadding(0.0)
-        self.canvas.vb.menu.axes[0].deleteLater()
-        self.canvas.vb.menu.ctrl[1].invertCheck.hide()
-        self.canvas.vb.menu.ctrl[1].label.hide()
-        self.canvas.vb.menu.ctrl[1].linkCombo.hide()
-        self.canvas.vb.menu.ctrl[1].mouseCheck.hide()
         self.canvas.vb.menu.viewAll.triggered.connect(on_view_all_triggered)
         layout.addWidget(plot)
 
