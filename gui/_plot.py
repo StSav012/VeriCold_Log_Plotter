@@ -17,6 +17,7 @@ from gui._data_model import DataModel
 from gui._time_span_edit import TimeSpanEdit
 
 _T = TypeVar('_T')
+_THE_BEGINNING_OF_TIME: datetime = datetime.fromtimestamp(0)
 
 
 def normalize(a: NDArray[_T]) -> NDArray[_T]:
@@ -115,7 +116,8 @@ class Plot(QtWidgets.QWidget):
                     y: float = point.y()
                     if self.canvas.axes['left']['item'].logMode:
                         y = 10 ** y
-                    cursor_balloon.setText(f'{datetime.fromtimestamp(round(x))}\n{y}')
+                    # don't use `datetime.fromtimestamp` here directly to avoid OSError on Windows when x < 0
+                    cursor_balloon.setText(f'{_THE_BEGINNING_OF_TIME + timedelta(seconds=x)}\n{y}')
                     balloon_border: QtCore.QRectF = cursor_balloon.boundingRect()
                     sx: float
                     sy: float
