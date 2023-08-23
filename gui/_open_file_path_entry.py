@@ -53,7 +53,7 @@ class OpenFilePathEntry(QtWidgets.QWidget):
         new_file_name, _ = pg.FileDialog.getOpenFileName(
             self, self.tr('Open'),
             str(self._path or ''),
-            self.tr('Translations') + ' (*.qm)')
+            self.tr('Translations') + '(*.qm)')
         if new_file_name:
             self.path = Path(new_file_name)
             self.changed.emit(self.path)
