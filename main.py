@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 import sys
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         import gui
-    except ImportError as ex:
-        tb = sys.exc_info()[2]
-        print(ex.with_traceback(tb), file=sys.stderr)
+    except ImportError:
+        import traceback
+
+        traceback.print_exc()
     except SyntaxError:
-        print('Get a newer Python!', file=sys.stderr)
+        print("Get a newer Python!", file=sys.stderr)
     else:
         gui.run()

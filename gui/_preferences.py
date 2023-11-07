@@ -2,25 +2,25 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Optional, Sequence
+from typing import Any, Sequence
 
 from pyqtgraph.Qt import QtWidgets
 
 from gui._open_file_path_entry import OpenFilePathEntry
 from gui._settings import Settings
 
-__all__ = ['Preferences']
+__all__ = ["Preferences"]
 
 
 class Preferences(QtWidgets.QDialog):
-    """ GUI preferences dialog """
+    """GUI preferences dialog"""
 
-    def __init__(self, settings: Settings, parent: Optional[QtWidgets.QWidget] = None, *args: Any) -> None:
+    def __init__(self, settings: Settings, parent: QtWidgets.QWidget | None = None, *args: Any) -> None:
         super().__init__(parent, *args)
 
         self.settings: Settings = settings
         self.setModal(True)
-        self.setWindowTitle(self.tr('Preferences'))
+        self.setWindowTitle(self.tr("Preferences"))
         if parent is not None:
             self.setWindowIcon(parent.windowIcon())
 
@@ -31,10 +31,10 @@ class Preferences(QtWidgets.QDialog):
         open_file_path_entry: OpenFilePathEntry
         key: str
         value: (
-            dict[str, tuple[str]] |
-            dict[str, tuple[Path]] |
-            dict[str, tuple[Sequence[str], str]] |
-            dict[str, tuple[Sequence[str], Sequence[str], str]]
+            dict[str, tuple[str]]
+            | dict[str, tuple[Path]]
+            | dict[str, tuple[Sequence[str], str]]
+            | dict[str, tuple[Sequence[str], Sequence[str], str]]
         )
         for key, value in self.settings.dialog.items():
             if isinstance(value, dict):
@@ -42,15 +42,11 @@ class Preferences(QtWidgets.QDialog):
                 box_layout: QtWidgets.QFormLayout = QtWidgets.QFormLayout(box)
                 key2: str
                 value2: (
-                    tuple[str] |
-                    tuple[Path] |
-                    tuple[Sequence[str], str] |
-                    tuple[Sequence[str], Sequence[str], str]
+                    tuple[str] | tuple[Path] | tuple[Sequence[str], str] | tuple[Sequence[str], Sequence[str], str]
                 )
                 value3: Sequence[str]
                 value3a: Sequence[str] | slice
                 value3b: Sequence[Any] | tuple[str]
-                value3c: str
                 index: int
                 item: str
                 for key2, value2 in value.items():
@@ -58,28 +54,31 @@ class Preferences(QtWidgets.QDialog):
                         if len(value2) == 1:
                             if isinstance(getattr(self.settings, value2[-1]), bool):
                                 check_box = QtWidgets.QCheckBox(self.tr(key2), box)
-                                setattr(check_box, 'callback', value2[-1])
+                                setattr(check_box, "callback", value2[-1])
                                 check_box.setChecked(getattr(self.settings, value2[-1]))
                                 check_box.toggled.connect(
-                                    lambda x: setattr(self.settings, getattr(self.sender(), 'callback'), x))
+                                    lambda x: setattr(self.settings, getattr(self.sender(), "callback"), x)
+                                )
                                 box_layout.addWidget(check_box)
                             elif isinstance(getattr(self.settings, value2[-1]), (Path, type(None))):
                                 open_file_path_entry = OpenFilePathEntry(getattr(self.settings, value2[-1]), box)
-                                setattr(open_file_path_entry, 'callback', value2[-1])
+                                setattr(open_file_path_entry, "callback", value2[-1])
                                 open_file_path_entry.changed.connect(
-                                    lambda x: setattr(self.settings, getattr(self.sender(), 'callback'), x))
+                                    lambda x: setattr(self.settings, getattr(self.sender(), "callback"), x)
+                                )
                                 box_layout.addRow(key2, open_file_path_entry)
                             # no else
                         elif len(value2) == 2:
                             value3 = value2[0]
                             if isinstance(value3, Sequence):
                                 combo_box = QtWidgets.QComboBox(box)
-                                setattr(combo_box, 'callback', value2[-1])
+                                setattr(combo_box, "callback", value2[-1])
                                 for item in value3:
                                     combo_box.addItem(self.tr(item))
                                 combo_box.setCurrentIndex(getattr(self.settings, value2[-1]))
                                 combo_box.currentIndexChanged.connect(
-                                    lambda x: setattr(self.settings, getattr(self.sender(), 'callback'), x))
+                                    lambda x: setattr(self.settings, getattr(self.sender(), "callback"), x)
+                                )
                                 box_layout.addRow(self.tr(key2), combo_box)
                             # no else
                         elif len(value2) == 3:
@@ -87,25 +86,33 @@ class Preferences(QtWidgets.QDialog):
                             value3b = value2[1]
                             if isinstance(value3a, Sequence) and isinstance(value3b, Sequence):
                                 combo_box = QtWidgets.QComboBox(box)
-                                setattr(combo_box, 'callback', value2[-1])
+                                setattr(combo_box, "callback", value2[-1])
                                 for index, item in enumerate(value3a):
                                     combo_box.addItem(self.tr(item), value3b[index])
                                 combo_box.setCurrentIndex(value3b.index(getattr(self.settings, value2[-1])))
                                 combo_box.currentIndexChanged.connect(
-                                    lambda _: setattr(self.settings, getattr(self.sender(), 'callback'),
-                                                      self.sender().currentData()))
+                                    lambda _: setattr(
+                                        self.settings,
+                                        getattr(self.sender(), "callback"),
+                                        self.sender().currentData(),
+                                    )
+                                )
                                 box_layout.addRow(self.tr(key2), combo_box)
-                            elif (isinstance(value3a, slice)
-                                  and isinstance(getattr(self.settings, value2[-1]), (int, float))
-                                  and isinstance(value3b, tuple)):
-                                if ((value3a.start is None or isinstance(value3a.start, int))
-                                        and (value3a.stop is None or isinstance(value3a.stop, int))
-                                        and (value3a.step is None or isinstance(value3a.step, int))
-                                        and isinstance(getattr(self.settings, value2[-1]), int)):
+                            elif (
+                                isinstance(value3a, slice)
+                                and isinstance(getattr(self.settings, value2[-1]), (int, float))
+                                and isinstance(value3b, tuple)
+                            ):
+                                if (
+                                    (value3a.start is None or isinstance(value3a.start, int))
+                                    and (value3a.stop is None or isinstance(value3a.stop, int))
+                                    and (value3a.step is None or isinstance(value3a.step, int))
+                                    and isinstance(getattr(self.settings, value2[-1]), int)
+                                ):
                                     spin_box = QtWidgets.QSpinBox(box)
                                 else:
                                     spin_box = QtWidgets.QDoubleSpinBox(box)
-                                setattr(spin_box, 'callback', value2[-1])
+                                setattr(spin_box, "callback", value2[-1])
                                 if value3a.start is not None:
                                     spin_box.setMinimum(value3a.start)
                                 if value3a.stop is not None:
@@ -120,15 +127,20 @@ class Preferences(QtWidgets.QDialog):
                                     spin_box.setSuffix(str(value3b[0]))
                                 # no else
                                 spin_box.valueChanged.connect(
-                                    lambda _: setattr(self.settings, getattr(self.sender(), 'callback'),
-                                                      self.sender().value()))
+                                    lambda _: setattr(
+                                        self.settings,
+                                        getattr(self.sender(), "callback"),
+                                        self.sender().value(),
+                                    )
+                                )
                                 box_layout.addRow(self.tr(key2), spin_box)
                             # no else
                         # no else
                     # no else
                 layout.addWidget(box)
             # no else
-        buttons: QtWidgets.QDialogButtonBox \
-            = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.StandardButton.Close, self)
+        buttons: QtWidgets.QDialogButtonBox = QtWidgets.QDialogButtonBox(
+            QtWidgets.QDialogButtonBox.StandardButton.Close, self
+        )
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)

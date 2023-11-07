@@ -1,25 +1,33 @@
 # coding: utf-8
-from typing import Any, Final, Optional, Sequence
+from __future__ import annotations
 
-import pyqtgraph as pg  # type: ignore
+from typing import Any, ClassVar, Sequence
+
+from pyqtgraph import CONFIG_OPTIONS, ColorButton
+from pyqtgraph.functions import mkColor
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 from gui._settings import Settings
 
-__all__ = ['PlotLineOptions']
+__all__ = ["PlotLineOptions"]
 
 
 class PlotLineOptions(QtWidgets.QWidget):
-    _count: int = 0
+    _count: ClassVar[int] = 0
 
-    DEFAULT_COLOR: Final[QtGui.QColor] = pg.mkColor(pg.CONFIG_OPTIONS['foreground'])
+    DEFAULT_COLOR: ClassVar[QtGui.QColor] = mkColor(CONFIG_OPTIONS["foreground"])
 
-    toggled: QtCore.Signal = QtCore.Signal(int, bool, name='toggled')
-    itemChanged: QtCore.Signal = QtCore.Signal(int, str, name='itemChanged')
-    colorChanged: QtCore.Signal = QtCore.Signal(int, QtGui.QColor, name='colorChanged')
+    toggled: ClassVar[QtCore.Signal] = QtCore.Signal(int, bool, name="toggled")
+    itemChanged: ClassVar[QtCore.Signal] = QtCore.Signal(int, str, name="itemChanged")
+    colorChanged: ClassVar[QtCore.Signal] = QtCore.Signal(int, QtGui.QColor, name="colorChanged")
 
-    def __init__(self, settings: Settings, items: Sequence[str], parent: Optional[QtWidgets.QWidget] = None,
-                 *args: Any) -> None:
+    def __init__(
+        self,
+        settings: Settings,
+        items: Sequence[str],
+        parent: QtWidgets.QWidget | None = None,
+        *args: Any,
+    ) -> None:
         super().__init__(parent, *args)
 
         self._index: int = PlotLineOptions._count
@@ -29,7 +37,7 @@ class PlotLineOptions(QtWidgets.QWidget):
         self.layout: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout(self)
         self.check_box: QtWidgets.QCheckBox = QtWidgets.QCheckBox(self)
         self.options: QtWidgets.QComboBox = QtWidgets.QComboBox(self)
-        self.color_selector: pg.ColorButton = pg.ColorButton(self)
+        self.color_selector: ColorButton = ColorButton(self)
 
         self.layout.addWidget(self.check_box, 0)
         self.layout.addWidget(self.options, 1)
@@ -48,11 +56,15 @@ class PlotLineOptions(QtWidgets.QWidget):
         self.options.blockSignals(True)
         self.options.clear()
         self.options.addItems(items)
-        if (self._index < len(self.settings.data_series_names)
-                and self.settings.data_series_names[self._index] in items):
+        if self._index < len(self.settings.data_series_names) and self.settings.data_series_names[self._index] in items:
             self.options.setCurrentText(self.settings.data_series_names[self._index])
         self.color_selector.blockSignals(True)
-        self.color_selector.setColor(self.settings.line_colors.get(self.options.currentText(), self.DEFAULT_COLOR))
+        self.color_selector.setColor(
+            self.settings.line_colors.get(
+                self.options.currentText(),
+                PlotLineOptions.DEFAULT_COLOR,
+            )
+        )
         self.color_selector.blockSignals(False)
         self.check_box.blockSignals(True)
         self.check_box.setChecked(self.settings.line_enabled.get(self.options.currentText(), False))
@@ -81,10 +93,12 @@ class PlotLineOptions(QtWidgets.QWidget):
 
     def on_combo_changed(self, new_text: str) -> None:
         self.settings.data_series_names[self._index] = new_text
-        self.color_selector.setColor(self.settings.line_colors.get(new_text, PlotLineOptions.DEFAULT_COLOR),
-                                     finished=False)
+        self.color_selector.setColor(
+            self.settings.line_colors.get(new_text, PlotLineOptions.DEFAULT_COLOR),
+            finished=False,
+        )
         self.itemChanged.emit(self._index, new_text)
 
-    def on_color_changed(self, emitter: pg.ColorButton) -> None:
+    def on_color_changed(self, emitter: ColorButton) -> None:
         self.settings.line_colors[self.options.currentText()] = emitter.color()
         self.colorChanged.emit(self._index, emitter.color())
