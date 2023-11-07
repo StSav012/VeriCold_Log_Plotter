@@ -7,7 +7,7 @@ from pyqtgraph import CONFIG_OPTIONS, ColorButton
 from pyqtgraph.functions import mkColor
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
-from gui._settings import Settings
+from ._settings import Settings
 
 __all__ = ["PlotLineOptions"]
 

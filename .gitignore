@@ -1,0 +1,8 @@
+.*
+*.ui
+*.pyd
+*.ts
+*.qm
+/dist/
+/vericold_plotter/_version.py
+/vericold_plotter.egg-info/

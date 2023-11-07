@@ -31,7 +31,8 @@ class MenuBar(QtWidgets.QMenuBar):
 
         self.action_open.setIcon(
             QtGui.QIcon.fromTheme(
-                "document-open", self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_DialogOpenButton)
+                "document-open",
+                self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_DialogOpenButton),
             )
         )
         self.action_open.setObjectName("action_open")
@@ -41,7 +42,8 @@ class MenuBar(QtWidgets.QMenuBar):
         self.action_export_visible.setObjectName("action_export_visible")
         self.action_reload.setIcon(
             QtGui.QIcon.fromTheme(
-                "view-refresh", self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_BrowserReload)
+                "view-refresh",
+                self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_BrowserReload),
             )
         )
         self.action_reload.setObjectName("action_reload")
@@ -50,21 +52,24 @@ class MenuBar(QtWidgets.QMenuBar):
         self.action_preferences.setObjectName("action_preferences")
         self.action_quit.setIcon(
             QtGui.QIcon.fromTheme(
-                "application-exit", self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_DialogCloseButton)
+                "application-exit",
+                self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_DialogCloseButton),
             )
         )
         self.action_quit.setMenuRole(QtGui.QAction.MenuRole.QuitRole)
         self.action_quit.setObjectName("action_quit")
         self.action_about.setIcon(
             QtGui.QIcon.fromTheme(
-                "help-about", self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_DialogHelpButton)
+                "help-about",
+                self.style().standardIcon(QtWidgets.QStyle.StandardPixmap.SP_DialogHelpButton),
             )
         )
         self.action_about.setMenuRole(QtGui.QAction.MenuRole.AboutRole)
         self.action_about.setObjectName("action_about")
         self.action_about_qt.setIcon(
             QtGui.QIcon.fromTheme(
-                "help-about-qt", QtGui.QIcon(":/qt-project.org/q" "messagebox/images/qt" "logo-64.png")
+                "help-about-qt",
+                QtGui.QIcon(":/qt-project.org/q" "messagebox/images/qt" "logo-64.png"),
             )
         )
         self.action_about_qt.setMenuRole(QtGui.QAction.MenuRole.AboutQtRole)
@@ -118,15 +123,26 @@ class MenuBar(QtWidgets.QMenuBar):
         self.action_about_qt.setText(self.tr("About Qt"))
 
     def on_action_about_triggered(self) -> None:
+        try:
+            from .._version import __version__
+        except ImportError:
+            __version__ = None
+
         QtWidgets.QMessageBox.about(
             self,
             self.tr("About VeriCold Log Plotter"),
             "<html><p>"
+            + (
+                (self.tr("VeriCold Log Plotter is version {0}").format(__version__) + "</p><p>")
+                if __version__ is not None
+                else ""
+            )
             + self.tr("VeriCold logfiles are created by Oxford Instruments plc.")
-            + "</p><br><p>"
+            + "</p><p>"
             + self.tr("VeriCold Log Plotter is licensed under the {0}.").format(
                 "<a href='https://www.gnu.org/copyleft/lesser.html'>{0}</a>".format(self.tr("GNU LGPL version 3"))
             )
+            + "</p><p>"
             + self.tr("The source code is available on {0}.").format(
                 "<a href='https://github.com/StSav012/VeriCold_Log_Plotter'>GitHub</a>"
             )

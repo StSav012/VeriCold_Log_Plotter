@@ -22,8 +22,8 @@ from pyqtgraph.functions import mkBrush, mkPen
 from pyqtgraph.GraphicsScene.mouseEvents import MouseClickEvent  # type: ignore
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
-from gui._data_model import DataModel
-from gui._time_span_edit import TimeSpanEdit
+from ._data_model import DataModel
+from ._time_span_edit import TimeSpanEdit
 
 __all__ = ["Plot"]
 

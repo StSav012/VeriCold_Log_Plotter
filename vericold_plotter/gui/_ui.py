@@ -10,13 +10,13 @@ from numpy.typing import NDArray
 from pyqtgraph import ComboBox, ViewBox
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
-from gui._data_model import DataModel
-from gui._menu_bar import MenuBar
-from gui._plot import Plot
-from gui._plot_line_options import PlotLineOptions
-from gui._preferences import Preferences
-from gui._settings import Settings
-from log_parser import parse
+from ._data_model import DataModel
+from ._menu_bar import MenuBar
+from ._plot import Plot
+from ._plot_line_options import PlotLineOptions
+from ._preferences import Preferences
+from ._settings import Settings
+from ..log_parser import parse
 
 __all__ = ["MainWindow", "PLOT_LINES_COUNT"]
 
@@ -73,7 +73,7 @@ class MainWindow(QtWidgets.QMainWindow):
         window_icon.loadFromData(
             b"""
 <svg version="1.1" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
-    <rect width="100%" height="100%" fill="#282e70"/>
+    <rect width="128" height="128" fill="#282e70"/>
     <path d="M 23 44 A 44 44 0 1 1 23 84" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="18"/>
     <path d="M 45 32 A 36.5 36.5 0 1 1 45 96 A 40 40 0 1 0 45 32" fill="#282e70" stroke="none"/>
 </svg>

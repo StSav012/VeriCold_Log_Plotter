@@ -6,8 +6,8 @@ from typing import Any, Sequence
 
 from pyqtgraph.Qt import QtWidgets
 
-from gui._open_file_path_entry import OpenFilePathEntry
-from gui._settings import Settings
+from ._open_file_path_entry import OpenFilePathEntry
+from ._settings import Settings
 
 __all__ = ["Preferences"]
 
