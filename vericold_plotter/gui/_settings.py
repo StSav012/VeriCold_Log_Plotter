@@ -146,3 +146,87 @@ class Settings(QtCore.QSettings):
         self.beginGroup("plot")
         self.setValue("xAxis", new_value)
         self.endGroup()
+
+    @property
+    def opened_file_name(self) -> str:
+        try:
+            self.beginGroup("location")
+            return cast(str, self.value("open", str(Path.cwd()), str))
+        finally:
+            self.endGroup()
+
+    @opened_file_name.setter
+    def opened_file_name(self, filename: str) -> None:
+        self.beginGroup("location")
+        self.setValue("open", filename)
+        self.endGroup()
+
+    @property
+    def exported_file_name(self) -> str:
+        try:
+            self.beginGroup("location")
+            return cast(str, self.value("export", str(Path.cwd()), str))
+        finally:
+            self.endGroup()
+
+    @exported_file_name.setter
+    def exported_file_name(self, filename: str) -> None:
+        self.beginGroup("location")
+        self.setValue("export", filename)
+        self.endGroup()
+
+    @property
+    def export_dialog_state(self) -> QtCore.QByteArray:
+        try:
+            self.beginGroup("location")
+            return cast(QtCore.QByteArray, self.value("exportDialogState", QtCore.QByteArray()))
+        finally:
+            self.endGroup()
+
+    @export_dialog_state.setter
+    def export_dialog_state(self, state: QtCore.QByteArray) -> None:
+        self.beginGroup("location")
+        self.setValue("exportDialogState", state)
+        self.endGroup()
+
+    @property
+    def export_dialog_geometry(self) -> QtCore.QByteArray:
+        try:
+            self.beginGroup("location")
+            return cast(QtCore.QByteArray, self.value("exportDialogGeometry", QtCore.QByteArray()))
+        finally:
+            self.endGroup()
+
+    @export_dialog_geometry.setter
+    def export_dialog_geometry(self, state: QtCore.QByteArray) -> None:
+        self.beginGroup("location")
+        self.setValue("exportDialogGeometry", state)
+        self.endGroup()
+
+    @property
+    def open_dialog_state(self) -> QtCore.QByteArray:
+        try:
+            self.beginGroup("location")
+            return cast(QtCore.QByteArray, self.value("openDialogState", QtCore.QByteArray()))
+        finally:
+            self.endGroup()
+
+    @open_dialog_state.setter
+    def open_dialog_state(self, state: QtCore.QByteArray) -> None:
+        self.beginGroup("location")
+        self.setValue("openDialogState", state)
+        self.endGroup()
+
+    @property
+    def open_dialog_geometry(self) -> QtCore.QByteArray:
+        try:
+            self.beginGroup("location")
+            return cast(QtCore.QByteArray, self.value("openDialogGeometry", QtCore.QByteArray()))
+        finally:
+            self.endGroup()
+
+    @open_dialog_geometry.setter
+    def open_dialog_geometry(self, state: QtCore.QByteArray) -> None:
+        self.beginGroup("location")
+        self.setValue("openDialogGeometry", state)
+        self.endGroup()

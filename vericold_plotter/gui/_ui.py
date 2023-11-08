@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, ClassVar, Final, Iterable, Sequence, TextIO, cast, final
+from typing import ClassVar, Final, Iterable, Sequence, cast, final
 
 import numpy as np
 from numpy.typing import NDArray
@@ -11,6 +11,7 @@ from pyqtgraph import ComboBox, ViewBox
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 from ._data_model import DataModel
+from ._file_dialog import FileDialog
 from ._menu_bar import MenuBar
 from ._plot import Plot
 from ._plot_line_options import PlotLineOptions
@@ -53,13 +54,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.data_model: DataModel = DataModel()
         self.plot: Plot = Plot(self)
 
-        self.export_all: bool = True
         self.menu_bar: MenuBar = MenuBar(self)
 
         self.status_bar: QtWidgets.QStatusBar = QtWidgets.QStatusBar(self)
-
-        self._opened_file_name: str = ""
-        self._exported_file_name: str = ""
 
         self.reload_timer: QtCore.QTimer = QtCore.QTimer(self)
         self.file_created: float = 0.0
@@ -138,11 +135,6 @@ class MainWindow(QtWidgets.QMainWindow):
         event.accept()
 
     def load_settings(self) -> None:
-        self.settings.beginGroup("location")
-        self._opened_file_name = cast(str, self.settings.value("open", str(Path.cwd()), str))
-        self._exported_file_name = cast(str, self.settings.value("export", str(Path.cwd()), str))
-        self.settings.endGroup()
-
         self.settings.beginGroup("window")
         # Fallback: Center the window
         desktop: QtGui.QScreen = QtWidgets.QApplication.screens()[0]
@@ -162,11 +154,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.settings.endGroup()
 
     def save_settings(self) -> None:
-        self.settings.beginGroup("location")
-        self.settings.setValue("open", self._opened_file_name)
-        self.settings.setValue("export", self._exported_file_name)
-        self.settings.endGroup()
-
         self.settings.beginGroup("window")
         self.settings.setValue("geometry", self.saveGeometry())
         self.settings.setValue("state", self.saveState())
@@ -216,7 +203,7 @@ class MainWindow(QtWidgets.QMainWindow):
             except (IOError, RuntimeError) as ex:
                 self.status_bar.showMessage(" ".join(repr(a) for a in ex.args))
                 return False
-        self._opened_file_name = file_name
+        self.settings.opened_file_name = file_name
         self.data_model.set_data(data, titles)
 
         self.combo_x_axis.blockSignals(True)
@@ -253,7 +240,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.menu_bar.action_reload.setEnabled(True)
         self.menu_bar.action_auto_reload.setEnabled(True)
         self.status_bar.showMessage(self.tr("Ready"))
-        self.file_created = Path(self._opened_file_name).lstat().st_mtime
+        self.file_created = Path(self.settings.opened_file_name).lstat().st_mtime
         self.check_file_updates = check_file_updates
         self.setWindowTitle(f"{file_name} — {MainWindow._initial_window_title}")
         return True
@@ -274,83 +261,6 @@ class MainWindow(QtWidgets.QMainWindow):
         header = [h for h, b in zip(header, somehow_visible_lines) if b]
         return data, header
 
-    def save_csv(self, filename: str) -> bool:
-        data: NDArray[np.float64] = self.data_model.data
-        header: list[str]
-        if self.export_all:
-            header = self.data_model.header
-        else:
-            data, header = self.visible_data()
-        try:
-            f_out: TextIO
-            with open(filename, "wt", newline="") as f_out:
-                f_out.write(self.settings.csv_separator.join(header) + self.settings.line_end)
-                f_out.writelines(
-                    (
-                        (
-                            self.settings.csv_separator.join(f"{xii}" for xii in xi)
-                            if isinstance(xi, Iterable)
-                            else f"{xi}"
-                        )
-                        + self.settings.line_end
-                    )
-                    for xi in data.T
-                )
-        except IOError as ex:
-            self.status_bar.showMessage(" ".join(ex.args))
-            return False
-        else:
-            self._exported_file_name = filename
-            self.status_bar.showMessage(self.tr("Saved to {0}").format(filename))
-            return True
-
-    def save_xlsx(self, filename: str) -> bool:
-        try:
-            from pyexcelerate import Font, Format, Panes, Style, Workbook, Worksheet
-        except ImportError as ex:
-            self.status_bar.showMessage(" ".join(repr(a) for a in ex.args))
-            return False
-
-        if not Path(filename).suffix.casefold() == ".xlsx":
-            filename += ".xlsx"
-
-        data: NDArray[np.float64] = self.data_model.data
-        header: list[str]
-        if self.export_all:
-            header = self.data_model.header
-        else:
-            data, header = self.visible_data()
-        try:
-            workbook: Workbook = Workbook()
-            worksheet: Worksheet = workbook.new_sheet(str(Path(self._opened_file_name).with_suffix("").name))
-            worksheet.panes = Panes(y=1)  # freeze first row
-
-            header_style: Style = Style(font=Font(bold=True))
-            datetime_style: Style = Style(format=Format("yyyy-mm-dd hh:mm:ss"), size=-1)
-            auto_size_style: Style = Style(size=-1)
-
-            col: int
-            row: int
-            for col in range(data.shape[0]):
-                worksheet.set_cell_value(1, col + 1, header[col])
-                if header[col].endswith(("(s)", "(secs)")):
-                    for row in range(data.shape[1]):
-                        worksheet.set_cell_value(row + 2, col + 1, datetime.fromtimestamp(data[col, row]))
-                        worksheet.set_cell_style(row + 2, col + 1, datetime_style)
-                else:
-                    for row in range(data.shape[1]):
-                        worksheet.set_cell_value(row + 2, col + 1, data[col, row])
-                        worksheet.set_cell_style(row + 2, col + 1, auto_size_style)
-            worksheet.set_row_style(1, header_style)
-            workbook.save(filename)
-        except IOError as ex:
-            self.status_bar.showMessage(" ".join(ex.args))
-            return False
-        else:
-            self._exported_file_name = filename
-            self.status_bar.showMessage(self.tr("Saved to {0}").format(filename))
-            return True
-
     @property
     def check_file_updates(self) -> bool:
         return self.reload_timer.isActive()
@@ -361,61 +271,37 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @QtCore.Slot()
     def on_action_open_triggered(self) -> None:
-        new_file_names: list[str]
-        new_file_names, _ = QtWidgets.QFileDialog.getOpenFileNames(
-            self,
-            self.tr("Open"),
-            self._opened_file_name,
-            f'{self.tr("VeriCold data logfile")} (*.vcl);;{self.tr("All Files")} (*.*)',
-        )
-        self.load_file(new_file_names)
+        fd: FileDialog = FileDialog(self.settings, self)
+        new_file_names: list[str] = fd.get_open_filenames()
+        if new_file_names:
+            self.load_file(new_file_names)
 
-    def export(self) -> None:
-        import importlib.util
-
-        supported_formats: dict[str, str] = {".csv": f'{self.tr("Text with separators")}(*.csv)'}
-        supported_formats_callbacks: dict[str, Callable[[str], bool]] = {".csv": self.save_csv}
-        if importlib.util.find_spec("pyexcelerate") is not None:
-            supported_formats[".xlsx"] = f'{self.tr("Microsoft Excel")}(*.xlsx)'
-            supported_formats_callbacks[".xlsx"] = self.save_xlsx
-        selected_filter: str = ""
-        if self._exported_file_name:
-            exported_file_name_ext: str = Path(self._exported_file_name).suffix
-            if exported_file_name_ext in supported_formats:
-                selected_filter = supported_formats[exported_file_name_ext]
-        new_file_name: str
-        new_file_name_filter: str  # BUG: `new_file_name_filter` is empty when a native dialog is used
-        # noinspection PyTypeChecker
-        new_file_name, new_file_name_filter = QtWidgets.QFileDialog.getSaveFileName(
-            self,
-            self.tr("Export"),
-            str(
-                Path(self._exported_file_name or self._opened_file_name)
-                .with_name(Path(self._opened_file_name).name)
-                .with_suffix("")
-            ),
-            ";;".join(supported_formats.values()),
-            selected_filter,
-        )
-        if not new_file_name:
-            return
-        new_file_name_ext: str = Path(new_file_name).suffix
-        if new_file_name_ext in supported_formats_callbacks:
-            supported_formats_callbacks[new_file_name_ext](new_file_name)
+    def export(self, export_all: bool = True) -> None:
+        data: NDArray[np.float64] = self.data_model.data
+        header: list[str]
+        if export_all:
+            header = self.data_model.header
+        else:
+            data, header = self.visible_data()
+        try:
+            fd: FileDialog = FileDialog(self.settings, self)
+            fd.export(data, header)
+        except IOError as ex:
+            self.status_bar.showMessage(" ".join(ex.args))
+        else:
+            self.status_bar.showMessage(self.tr("Saved to {0}").format(self.settings.exported_file_name))
 
     @QtCore.Slot()
     def on_action_export_triggered(self) -> None:
-        self.export_all = True
-        self.export()
+        self.export(export_all=True)
 
     @QtCore.Slot()
     def on_action_export_visible_triggered(self) -> None:
-        self.export_all = False
-        self.export()
+        self.export(export_all=False)
 
     @QtCore.Slot()
     def on_action_reload_triggered(self) -> None:
-        self.load_file(self._opened_file_name)
+        self.load_file(self.settings.opened_file_name)
 
     @QtCore.Slot(bool)
     def on_action_auto_reload_toggled(self, new_state: bool) -> None:
@@ -501,21 +387,21 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @QtCore.Slot()
     def on_timeout(self) -> None:
-        if not self._opened_file_name:
+        if not self.settings.opened_file_name:
             return
 
-        if not Path(self._opened_file_name).exists():
+        if not Path(self.settings.opened_file_name).exists():
             return
 
-        if self.file_created == Path(self._opened_file_name).lstat().st_mtime:
+        if self.file_created == Path(self.settings.opened_file_name).lstat().st_mtime:
             return
         else:
-            self.file_created = Path(self._opened_file_name).lstat().st_mtime
+            self.file_created = Path(self.settings.opened_file_name).lstat().st_mtime
 
         titles: list[str]
         data: NDArray[np.float64]
         try:
-            titles, data = parse(self._opened_file_name)
+            titles, data = parse(self.settings.opened_file_name)
         except (IOError, RuntimeError) as ex:
             self.status_bar.showMessage(" ".join(repr(a) for a in ex.args))
         else:
