@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
-from ._ui import MainWindow
-
 __all__ = ["run"]
 
 """ Compatibility fixes"""
@@ -31,6 +29,8 @@ if not hasattr(QtCore, "Slot"):  # PyQt5, PyQt6
 
 def run() -> int:
     import sys
+
+    from ._ui import MainWindow
 
     app: QtWidgets.QApplication = QtWidgets.QApplication(sys.argv)
 
