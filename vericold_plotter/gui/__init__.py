@@ -5,7 +5,7 @@ from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 __all__ = ["run"]
 
-""" Compatibility fixes"""
+"""Compatibility fixes"""
 
 if not hasattr(QtGui, "QAction"):  # PyQt5, PySide2
     QtGui.QAction = QtWidgets.QAction  # type: ignore
@@ -62,6 +62,9 @@ def run() -> int:
         if argv.split()[0] == "-check":
             check_file_updates = True
             sys.argv[index] = argv[len("-check") :].lstrip()
-    window.load_file((QtCore.QUrl(argv).path() or argv for argv in sys.argv[1:]), check_file_updates=check_file_updates)
+    window.load_file(
+        (QtCore.QUrl(argv).path() or argv for argv in sys.argv[1:]),
+        check_file_updates=check_file_updates,
+    )
     window.show()
     return app.exec()
