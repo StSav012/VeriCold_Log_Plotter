@@ -8,7 +8,7 @@ authors = [
 ]
 description = 'VeriCold logfiles plotter'
 readme = 'README.md'
-license = {text = 'MIT'}
+license = {text = 'LGPLv3'}
 requires-python = '>=3.8'
 classifiers = [
     'Development Status :: 4 - Beta',
