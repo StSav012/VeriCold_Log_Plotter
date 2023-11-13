@@ -30,8 +30,7 @@ jobs:
       run: >-
         python -m
         build
-        --sdist
-        --outdir dist/
+        -o dist/
         .
     - name: Publish distribution to Test PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
