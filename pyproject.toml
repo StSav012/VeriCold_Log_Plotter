@@ -30,6 +30,9 @@ dynamic = [
     'version',
 ]
 
+[project.scripts]
+vericold-converter = 'vericold_plotter:cli'
+
 [project.gui-scripts]
 vericold-plotter = 'vericold_plotter:gui'
 
