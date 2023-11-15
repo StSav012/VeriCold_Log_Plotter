@@ -2,3 +2,6 @@ PySide6-Essentials
 pyqtgraph
 numpy
 pyexcelerate
+
+# for setup.py
+packaging

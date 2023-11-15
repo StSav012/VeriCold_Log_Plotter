@@ -5,6 +5,8 @@ import site
 
 from setuptools import setup
 
+from packaging.version import Version
+
 site.main()
 
 
@@ -16,8 +18,6 @@ def required_packages() -> list[str]:
 
     import platform
     from typing import NamedTuple, Sequence
-
-    from pkg_resources import parse_version
 
     class PackageRequirement(NamedTuple):
         package_name: str
@@ -37,8 +37,7 @@ def required_packages() -> list[str]:
             return False
         else:
             if package_requirement.min_version and (
-                parse_version(version(package_requirement.package_name))
-                < parse_version(package_requirement.min_version)
+                Version(version(package_requirement.package_name)) < Version(package_requirement.min_version)
             ):
                 return False
         return True
@@ -70,7 +69,7 @@ def required_packages() -> list[str]:
     if (
         # Windows 10 21H2 or later required
         uname.system == "Windows"
-        and parse_version(uname.version) < parse_version("10.0.19044")
+        and Version(uname.version) < Version("10.0.19044")
     ) or uname.machine not in ("x86_64", "AMD64"):
         # Qt6 does not support the OSes
         qt_list = [
