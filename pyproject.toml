@@ -27,6 +27,9 @@ dynamic = [
     'dependencies',
 ]
 
+[project.optional-dependencies]
+xlsx = ['pyexcelerate']
+
 [project.scripts]
 vericold-converter = 'vericold_plotter:cli'
 
