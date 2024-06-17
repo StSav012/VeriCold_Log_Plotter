@@ -44,8 +44,17 @@ vericold-plotter = 'vericold_plotter:gui'
 local_scheme = 'no-local-version'
 write_to = 'vericold_plotter/_version.py'
 
+[tool.setuptools]
+packages = ['vericold_plotter']
+
 [tool.setuptools.dynamic]
 version = {attr = 'vericold_plotter._version.__version__'}
+
+[tool.setuptools.exclude-package-data]
+"*" = [
+    ".github",
+    ".gitignore",
+]
 
 [tool.black]
 target-versions = ["py38", "py311", "py312"]
