@@ -30,28 +30,8 @@ if not hasattr(QtCore, "Slot"):  # PyQt5, PyQt6
 def run() -> int:
     import sys
 
+    from ._app import app
     from ._ui import MainWindow
-
-    app: QtWidgets.QApplication = QtWidgets.QApplication(sys.argv)
-
-    languages: set[str] = set(QtCore.QLocale().uiLanguages() + [QtCore.QLocale().bcp47Name(), QtCore.QLocale().name()])
-    language: str
-    qt_translator: QtCore.QTranslator = QtCore.QTranslator()
-    for language in languages:
-        if qt_translator.load(
-            "qt_" + language,
-            QtCore.QLibraryInfo.path(QtCore.QLibraryInfo.LibraryPath.TranslationsPath),
-        ):
-            app.installTranslator(qt_translator)
-            break
-    qtbase_translator: QtCore.QTranslator = QtCore.QTranslator()
-    for language in languages:
-        if qtbase_translator.load(
-            "qtbase_" + language,
-            QtCore.QLibraryInfo.path(QtCore.QLibraryInfo.LibraryPath.TranslationsPath),
-        ):
-            app.installTranslator(qtbase_translator)
-            break
 
     window: MainWindow = MainWindow()
     # if a command line argument starts with `-check`, enable the auto-reload timer
