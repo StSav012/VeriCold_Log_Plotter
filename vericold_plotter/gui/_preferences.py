@@ -41,9 +41,7 @@ class Preferences(QtWidgets.QDialog):
                 box: QtWidgets.QGroupBox = QtWidgets.QGroupBox(key, self)
                 box_layout: QtWidgets.QFormLayout = QtWidgets.QFormLayout(box)
                 key2: str
-                value2: (
-                    tuple[str] | tuple[Path] | tuple[Sequence[str], str] | tuple[Sequence[str], Sequence[str], str]
-                )
+                value2: tuple[str] | tuple[Path] | tuple[Sequence[str], str] | tuple[Sequence[str], Sequence[str], str]
                 value3: Sequence[str]
                 value3a: Sequence[str] | slice
                 value3b: Sequence[Any] | tuple[str]
@@ -53,7 +51,7 @@ class Preferences(QtWidgets.QDialog):
                     if isinstance(value2, tuple) and isinstance(value2[-1], str) and value2[-1]:
                         if len(value2) == 1:
                             if isinstance(getattr(self.settings, value2[-1]), bool):
-                                check_box = QtWidgets.QCheckBox(self.tr(key2), box)
+                                check_box = QtWidgets.QCheckBox(key2, box)
                                 setattr(check_box, "callback", value2[-1])
                                 check_box.setChecked(getattr(self.settings, value2[-1]))
                                 check_box.toggled.connect(
@@ -74,12 +72,12 @@ class Preferences(QtWidgets.QDialog):
                                 combo_box = QtWidgets.QComboBox(box)
                                 setattr(combo_box, "callback", value2[-1])
                                 for item in value3:
-                                    combo_box.addItem(self.tr(item))
+                                    combo_box.addItem(item)
                                 combo_box.setCurrentIndex(getattr(self.settings, value2[-1]))
                                 combo_box.currentIndexChanged.connect(
                                     lambda x: setattr(self.settings, getattr(self.sender(), "callback"), x)
                                 )
-                                box_layout.addRow(self.tr(key2), combo_box)
+                                box_layout.addRow(key2, combo_box)
                             # no else
                         elif len(value2) == 3:
                             value3a = value2[0]
@@ -88,7 +86,7 @@ class Preferences(QtWidgets.QDialog):
                                 combo_box = QtWidgets.QComboBox(box)
                                 setattr(combo_box, "callback", value2[-1])
                                 for index, item in enumerate(value3a):
-                                    combo_box.addItem(self.tr(item), value3b[index])
+                                    combo_box.addItem(item, value3b[index])
                                 combo_box.setCurrentIndex(value3b.index(getattr(self.settings, value2[-1])))
                                 combo_box.currentIndexChanged.connect(
                                     lambda _: setattr(
@@ -97,7 +95,7 @@ class Preferences(QtWidgets.QDialog):
                                         self.sender().currentData(),
                                     )
                                 )
-                                box_layout.addRow(self.tr(key2), combo_box)
+                                box_layout.addRow(key2, combo_box)
                             elif (
                                 isinstance(value3a, slice)
                                 and isinstance(getattr(self.settings, value2[-1]), (int, float))
@@ -133,7 +131,7 @@ class Preferences(QtWidgets.QDialog):
                                         self.sender().value(),
                                     )
                                 )
-                                box_layout.addRow(self.tr(key2), spin_box)
+                                box_layout.addRow(key2, spin_box)
                             # no else
                         # no else
                     # no else
