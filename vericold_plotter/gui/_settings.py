@@ -80,6 +80,11 @@ class Settings(QtCore.QSettings):
         return {
             self.tr("View"): {
                 self.tr("Translation file:"): ("translation_path",),
+                self.tr("Lines count (restart to apply):"): (
+                    slice(1, 99),
+                    (),
+                    Settings.plot_lines_count.fget.__name__,
+                ),
             },
             self.tr("Export"): {
                 self.tr("Line ending:"): (
@@ -132,6 +137,19 @@ class Settings(QtCore.QSettings):
     def translation_path(self, new_value: Path | None) -> None:
         self.beginGroup("translation")
         self.setValue("filePath", str(new_value) if new_value is not None else "")
+        self.endGroup()
+
+    @property
+    def plot_lines_count(self) -> int:
+        self.beginGroup("plot")
+        v: int = cast(int, self.value("plotLinesCount", 8, int))
+        self.endGroup()
+        return v
+
+    @plot_lines_count.setter
+    def plot_lines_count(self, plot_lines_count: int) -> None:
+        self.beginGroup("plot")
+        self.setValue("plotLinesCount", plot_lines_count)
         self.endGroup()
 
     @property

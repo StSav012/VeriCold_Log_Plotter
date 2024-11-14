@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
-from typing import ClassVar, Final, Iterable, Sequence, cast, final
+from typing import ClassVar, Iterable, Sequence, cast, final
 
 import numpy as np
 from numpy.typing import NDArray
@@ -19,9 +19,7 @@ from ._preferences import Preferences
 from ._settings import Settings
 from ..log_parser import parse
 
-__all__ = ["MainWindow", "PLOT_LINES_COUNT"]
-
-PLOT_LINES_COUNT: Final[int] = 8
+__all__ = ["MainWindow"]
 
 
 @final
@@ -48,7 +46,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.combo_y_axis: ComboBox = ComboBox(self.box_settings)
         self.line_options_y_axis: list[PlotLineOptions] = [
             PlotLineOptions(items=[], settings=self.settings, parent=self.dock_settings)
-            for _ in range(PLOT_LINES_COUNT)
+            for _ in range(self.settings.plot_lines_count)
         ]
 
         self.data_model: DataModel = DataModel()
