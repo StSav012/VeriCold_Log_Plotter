@@ -55,14 +55,16 @@ class Preferences(QtWidgets.QDialog):
                                 setattr(check_box, "callback", value2[-1])
                                 check_box.setChecked(getattr(self.settings, value2[-1]))
                                 check_box.toggled.connect(
-                                    lambda x: setattr(self.settings, getattr(self.sender(), "callback"), x)
+                                    lambda x, sender=check_box: setattr(self.settings, getattr(sender, "callback"), x)
                                 )
                                 box_layout.addWidget(check_box)
                             elif isinstance(getattr(self.settings, value2[-1]), (Path, type(None))):
                                 open_file_path_entry = OpenFilePathEntry(getattr(self.settings, value2[-1]), box)
                                 setattr(open_file_path_entry, "callback", value2[-1])
                                 open_file_path_entry.changed.connect(
-                                    lambda x: setattr(self.settings, getattr(self.sender(), "callback"), x)
+                                    lambda x, sender=open_file_path_entry: setattr(
+                                        self.settings, getattr(sender, "callback"), x
+                                    )
                                 )
                                 box_layout.addRow(key2, open_file_path_entry)
                             # no else
@@ -75,7 +77,7 @@ class Preferences(QtWidgets.QDialog):
                                     combo_box.addItem(item)
                                 combo_box.setCurrentIndex(getattr(self.settings, value2[-1]))
                                 combo_box.currentIndexChanged.connect(
-                                    lambda x: setattr(self.settings, getattr(self.sender(), "callback"), x)
+                                    lambda x, sender=combo_box: setattr(self.settings, getattr(sender, "callback"), x)
                                 )
                                 box_layout.addRow(key2, combo_box)
                             # no else
@@ -89,10 +91,10 @@ class Preferences(QtWidgets.QDialog):
                                     combo_box.addItem(item, value3b[index])
                                 combo_box.setCurrentIndex(value3b.index(getattr(self.settings, value2[-1])))
                                 combo_box.currentIndexChanged.connect(
-                                    lambda _: setattr(
+                                    lambda _, sender=combo_box: setattr(
                                         self.settings,
-                                        getattr(self.sender(), "callback"),
-                                        self.sender().currentData(),
+                                        getattr(sender, "callback"),
+                                        sender.currentData(),
                                     )
                                 )
                                 box_layout.addRow(key2, combo_box)
@@ -125,10 +127,10 @@ class Preferences(QtWidgets.QDialog):
                                     spin_box.setSuffix(str(value3b[0]))
                                 # no else
                                 spin_box.valueChanged.connect(
-                                    lambda _: setattr(
+                                    lambda _, sender=spin_box: setattr(
                                         self.settings,
-                                        getattr(self.sender(), "callback"),
-                                        self.sender().value(),
+                                        getattr(sender, "callback"),
+                                        sender.value(),
                                     )
                                 )
                                 box_layout.addRow(key2, spin_box)
