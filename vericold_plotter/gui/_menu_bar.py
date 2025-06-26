@@ -130,17 +130,17 @@ class MenuBar(QtWidgets.QMenuBar):
             self.tr("About VeriCold Log Plotter"),
             "<html><p>"
             + (
-                (self.tr("VeriCold Log Plotter is version {}").format(__version__) + "</p><p>")
+                (self.tr("VeriCold Log Plotter is version {0}").format(__version__) + "</p><p>")
                 if __version__ is not None
                 else ""
             )
             + self.tr("VeriCold logfiles are created by Oxford Instruments plc.")
             + "</p><p>"
-            + self.tr("VeriCold Log Plotter is licensed under the {}.").format(
+            + self.tr("VeriCold Log Plotter is licensed under the {0}.").format(
                 "<a href='https://www.gnu.org/copyleft/lesser.html'>{}</a>".format(self.tr("GNU LGPL version 3"))
             )
             + "</p><p>"
-            + self.tr("The source code is available on {}.").format(
+            + self.tr("The source code is available on {0}.").format(
                 "<a href='https://github.com/StSav012/VeriCold_Log_Plotter'>GitHub</a>"
             )
             + "</p></html>",
