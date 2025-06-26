@@ -417,6 +417,7 @@ class Plot(QtWidgets.QWidget):
             data_model[x_column],
             normalize(data_model[y_column]) if normalized else data_model[y_column],
             pen=color,
+            label=y_column_name,
         )
 
     def set_line_visible(self, index: int, visible: bool) -> None:
