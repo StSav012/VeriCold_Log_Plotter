@@ -199,7 +199,14 @@ class FileDialog(QtWidgets.QFileDialog):
 
             for supported_format in supported_formats:
                 if new_file_mimetype in supported_format.mimetypes:
-                    supported_format.saver(new_file_name, data, header)
+                    if self.parent() is not None:
+                        self.parent().setDisabled(True)
+                        QtWidgets.QApplication.processEvents()
+                    try:
+                        supported_format.saver(new_file_name, data, header)
+                    finally:
+                        if self.parent() is not None:
+                            self.parent().setEnabled(True)
                     self.settings.exported_file_name = new_file_name
                     break
 
