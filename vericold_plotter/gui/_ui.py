@@ -225,7 +225,7 @@ class MainWindow(QtWidgets.QMainWindow):
         return True
 
     def visible_data(self) -> tuple[NDArray[np.float64], list[str]]:
-        header = [self.data_model.header[0]] + [o.option for o in self.line_options_y_axis]
+        header = [self.data_model.header[0]] + [o.option for o in self.line_options_y_axis if o.checked]
         data = self.data_model.data[[self.data_model.header.index(h) for h in header]]
 
         # crop the visible rectangle
