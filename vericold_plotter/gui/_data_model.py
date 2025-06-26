@@ -38,8 +38,10 @@ class DataModel:
         new_data: Iterable[Iterable[float]] | NDArray[np.float64],
         new_header: Sequence[str] | None = None,
     ) -> None:
-        self._data = np.array(new_data)
+        self._data = np.asarray(new_data, dtype=np.float64)
         good: NDArray[np.bool_] = np.full(self._data.shape[0], True, dtype=np.bool_)
+        if new_header is not None and "LineSize(bytes)" in new_header:
+            good[new_header.index("LineSize(bytes)")] = False
         if new_header is not None and "LineNumber" in new_header:
             good[new_header.index("LineNumber")] = False
         self._data = self._data[good]
@@ -49,4 +51,4 @@ class DataModel:
             c: str
             for i, c in enumerate(self._header):
                 if c.endswith("(K)"):  # temperature values must be positive
-                    self._data[self._data <= 0.0] = np.nan
+                    self._data[i, self._data[i] <= 0.0] = np.nan
