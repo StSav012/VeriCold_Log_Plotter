@@ -299,7 +299,7 @@ class Plot(QtWidgets.QWidget):
                 y_column: int = header.index(cast(str, y_column_name))  # no Nones here
                 x_column: int = y_column - 1
                 while x_column >= 0:
-                    if header[x_column].endswith(("(sec)", "(s)")):
+                    if header[x_column].endswith(("(secs)", "(s)")):
                         break
                     x_column -= 1
                 else:
@@ -395,7 +395,7 @@ class Plot(QtWidgets.QWidget):
         y_column: int = header.index(y_column_name)
         x_column: int = y_column - 1
         while x_column >= 0:
-            if header[x_column].endswith(("(sec)", "(s)")):
+            if header[x_column].endswith(("(secs)", "(s)")):
                 break
             x_column -= 1
         else:

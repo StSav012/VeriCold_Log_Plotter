@@ -111,7 +111,7 @@ class MenuBar(QtWidgets.QMenuBar):
         self.menu_about.setTitle(self.tr("About"))
         self.action_open.setText(self.tr("Open…"))
         self.action_export.setText(self.tr("Export…"))
-        self.action_export_visible.setText(self.tr("Export Visible..."))
+        self.action_export_visible.setText(self.tr("Export Visible…"))
         self.action_reload.setText(self.tr("Reload"))
         self.action_auto_reload.setText(self.tr("Auto Reload"))
         self.action_preferences.setText(self.tr("Preferences…"))
