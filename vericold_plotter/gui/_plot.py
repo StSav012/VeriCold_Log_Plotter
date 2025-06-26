@@ -75,10 +75,14 @@ class Plot(QtWidgets.QWidget):
         def on_view_all_triggered() -> None:
             if not self.lines:
                 return
-            min_x: float = min(line.xData[0] for line in self.lines if line.xData is not None and line.xData.size)
-            max_x: float = min(line.xData[-1] for line in self.lines if line.xData is not None and line.xData.size)
-            self.canvas.vb.autoRange(padding=0.0)
-            self.canvas.vb.setXRange(min_x, max_x, padding=0.0)
+            all_data: list[NDArray[np.float64]] = [
+                d for d in (d[~np.isnan(d)] for d in (line.xData for line in self.lines) if d is not None) if d.shape[0]
+            ]
+            if all_data:
+                min_x: float = min(float(d[0]) for d in all_data)
+                max_x: float = max(float(d[-1]) for d in all_data)
+                self.canvas.vb.autoRange(padding=0.0)
+                self.canvas.vb.setXRange(min_x, max_x, padding=0.0)
 
         self.canvas.autoBtn.clicked.disconnect(self.canvas.autoBtnClicked)
         self.canvas.autoBtn.clicked.connect(self.auto_range_y)
@@ -265,7 +269,6 @@ class Plot(QtWidgets.QWidget):
     def plot(
         self,
         data_model: DataModel,
-        x_column_name: str | None,
         y_column_names: Iterable[str | None],
         *,
         normalized: bool = False,
@@ -285,39 +288,59 @@ class Plot(QtWidgets.QWidget):
         color: QtGui.QColor
         visible: bool
         y_column_names = tuple(y_column_names)
-        if x_column_name is not None and all(y_column_names):
-            x_column: int = data_model.header.index(x_column_name)
+        if all(y_column_names):
+            header: list[str] = data_model.header
+            x_range: tuple[float, float] | None = None
             for y_column_name, color, visible in zip(
                 y_column_names,
                 cycle(colors or [CONFIG_OPTIONS["foreground"]]),
                 visibility,
             ):
-                y_column: int = data_model.header.index(cast(str, y_column_name))  # no Nones here
-                self.lines.append(
-                    self.canvas.plot(
-                        data_model[x_column],
-                        normalize(data_model[y_column]) if normalized else data_model[y_column],
-                        pen=color,
-                        label=y_column_name,
-                    )
+                y_column: int = header.index(cast(str, y_column_name))  # no Nones here
+                x_column: int = y_column - 1
+                while x_column >= 0:
+                    if header[x_column].endswith(("(sec)", "(s)")):
+                        break
+                    x_column -= 1
+                else:
+                    continue
+
+                x_data: NDArray[np.float64] = data_model[x_column]
+                good: NDArray[np.int64] = np.argwhere(~np.isnan(x_data))
+
+                if good.shape[0] > 1:
+                    if x_range is None:
+                        x_range = float(x_data[good[0]]), float(x_data[good[-1]])
+                    else:
+                        x_range = (
+                            min(float(x_data[good[0]]), *x_range),
+                            max(float(x_data[good[-1]]), *x_range),
+                        )
+
+                line: PlotDataItem = self.canvas.plot(
+                    x_data,
+                    normalize(data_model[y_column]) if normalized else data_model[y_column],
+                    pen=color,
+                    label=y_column_name,
                 )
-                self.lines[-1].curve.opts["pen"].setCosmetic(True)
-                self.lines[-1].setVisible(visible)
-            self.canvas.vb.setXRange(data_model[x_column][0], data_model[x_column][-1], padding=0.0)
+                line.curve.opts["pen"].setCosmetic(True)
+                line.setVisible(visible)
+                self.lines.append(line)
+            if x_range is not None:
+                self.canvas.vb.setXRange(x_range[0], x_range[-1], padding=0.0)
         else:
             for y_column_name, color, visible in zip(
                 y_column_names, cycle(colors or [CONFIG_OPTIONS["foreground"]]), visibility
             ):
-                self.lines.append(
-                    self.canvas.plot(
-                        [],
-                        [],
-                        pen=color,
-                        label=y_column_name,
-                    )
+                line: PlotDataItem = self.canvas.plot(
+                    [],
+                    [],
+                    pen=color,
+                    label=y_column_name,
                 )
-                self.lines[-1].curve.opts["pen"].setCosmetic(True)
-                self.lines[-1].setVisible(visible)
+                line.curve.opts["pen"].setCosmetic(True)
+                line.setVisible(visible)
+                self.lines.append(line)
         # restore log state if set
         log_mode_y: bool = self.canvas.getAxis("left").logMode
         if log_mode_y:
@@ -351,14 +374,13 @@ class Plot(QtWidgets.QWidget):
         self,
         index: int,
         data_model: DataModel,
-        x_column_name: str | None,
         y_column_name: str | None,
         *,
         normalized: bool = False,
         color: QtGui.QColor | QtGui.QPen | None = None,
         roll: bool = False,
     ) -> None:
-        if x_column_name is None or y_column_name is None:
+        if y_column_name is None:
             return
         if index >= len(self.lines):
             return
@@ -369,8 +391,15 @@ class Plot(QtWidgets.QWidget):
             color.setCosmetic(True)
         else:
             color = mkPen(color, cosmetic=True)
-        x_column: int = data_model.header.index(x_column_name)
-        y_column: int = data_model.header.index(y_column_name)
+        header: list[str] = data_model.header
+        y_column: int = header.index(y_column_name)
+        x_column: int = y_column - 1
+        while x_column >= 0:
+            if header[x_column].endswith(("(sec)", "(s)")):
+                break
+            x_column -= 1
+        else:
+            return
 
         if (
             roll

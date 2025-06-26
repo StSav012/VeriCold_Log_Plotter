@@ -38,8 +38,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dock_settings: QtWidgets.QDockWidget = QtWidgets.QDockWidget(self)
         self.box_settings: QtWidgets.QWidget = QtWidgets.QWidget(self.dock_settings)
         self.settings_layout: QtWidgets.QVBoxLayout = QtWidgets.QVBoxLayout(self.box_settings)
-        self.layout_x_axis: QtWidgets.QFormLayout = QtWidgets.QFormLayout()
-        self.combo_x_axis: ComboBox = ComboBox(self.box_settings)
+        self.layout_y_axis: QtWidgets.QFormLayout = QtWidgets.QFormLayout()
         self.combo_y_axis: ComboBox = ComboBox(self.box_settings)
         self.line_options_y_axis: list[PlotLineOptions] = [
             PlotLineOptions(items=[], settings=self.settings, parent=self.dock_settings)
@@ -100,9 +99,8 @@ class MainWindow(QtWidgets.QMainWindow):
             )
         )
         self.dock_settings.setWidget(self.box_settings)
-        self.layout_x_axis.addRow(self.tr("x-axis:"), self.combo_x_axis)
-        self.layout_x_axis.addRow(self.tr("y-axis:"), self.combo_y_axis)
-        self.settings_layout.addLayout(self.layout_x_axis)
+        self.layout_y_axis.addRow(self.tr("y-axis:"), self.combo_y_axis)
+        self.settings_layout.addLayout(self.layout_y_axis)
         cb: PlotLineOptions
         for cb in self.line_options_y_axis:
             self.settings_layout.addWidget(cb)
@@ -113,7 +111,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.load_settings()
 
-        self.combo_x_axis.currentTextChanged.connect(self.on_x_axis_changed)
         self.combo_y_axis.setItems((self.tr("absolute"), self.tr("relative"), self.tr("logarithmic")))
         self.combo_y_axis.currentIndexChanged.connect(self.on_y_axis_mode_changed)
         for cb in self.line_options_y_axis:
@@ -201,18 +198,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.settings.opened_file_name = file_name
         self.data_model.set_data(data, titles)
 
-        self.combo_x_axis.blockSignals(True)
-        self.combo_x_axis.setItems(
-            tuple(
-                filter(
-                    lambda t: t.endswith("(secs)") or t.endswith("(s)"),
-                    self.data_model.header,
-                )
-            )
-        )
-        self.combo_x_axis.setCurrentText(self.settings.argument)
-        self.combo_x_axis.blockSignals(False)
-
         cb: PlotLineOptions
         for cb in self.line_options_y_axis:
             cb.set_items(
@@ -225,7 +210,6 @@ class MainWindow(QtWidgets.QMainWindow):
             )
         self.plot.plot(
             self.data_model,
-            self.combo_x_axis.value(),
             (cb.option for cb in self.line_options_y_axis),
             colors=(cb.color for cb in self.line_options_y_axis),
             visibility=(cb.checked for cb in self.line_options_y_axis),
@@ -315,27 +299,12 @@ class MainWindow(QtWidgets.QMainWindow):
     def on_action_quit_triggered(self) -> None:
         self.close()
 
-    @QtCore.Slot(str)
-    def on_x_axis_changed(self, new_text: str) -> None:
-        normalized: bool = self.combo_y_axis.currentIndex() == 1
-        sender_index: int
-        for sender_index in range(min(len(self.line_options_y_axis), len(self.plot.lines))):
-            self.plot.replot(
-                sender_index,
-                self.data_model,
-                new_text,
-                self.line_options_y_axis[sender_index].option,
-                normalized=normalized,
-            )
-        self.settings.argument = new_text
-
     @QtCore.Slot(int, str)
     def on_y_axis_changed(self, sender_index: int, title: str) -> None:
         normalized: bool = self.combo_y_axis.currentIndex() == 1
         self.plot.replot(
             sender_index,
             self.data_model,
-            self.combo_x_axis.currentText(),
             title,
             color=self.settings.line_colors.get(title, PlotLineOptions.DEFAULT_COLOR),
             normalized=normalized,
@@ -358,7 +327,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.plot.replot(
                 sender_index,
                 self.data_model,
-                self.combo_x_axis.currentText(),
                 self.line_options_y_axis[sender_index].option,
                 normalized=(new_index == 1),
             )
@@ -370,7 +338,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.plot.replot(
             sender_index,
             self.data_model,
-            self.combo_x_axis.currentText(),
             self.line_options_y_axis[sender_index].option,
             color=new_color,
             normalized=normalized,
@@ -406,7 +373,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.plot.replot(
                     sender_index,
                     self.data_model,
-                    self.combo_x_axis.currentText(),
                     self.line_options_y_axis[sender_index].option,
                     roll=True,
                 )
