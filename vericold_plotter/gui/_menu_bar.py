@@ -1,4 +1,4 @@
-from pyqtgraph.Qt import QtGui, QtWidgets
+from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 __all__ = ["MenuBar"]
 
@@ -119,6 +119,7 @@ class MenuBar(QtWidgets.QMenuBar):
         self.action_about.setText(self.tr("About"))
         self.action_about_qt.setText(self.tr("About Qt"))
 
+    @QtCore.Slot()
     def on_action_about_triggered(self) -> None:
         try:
             from .._version import __version__
@@ -146,5 +147,6 @@ class MenuBar(QtWidgets.QMenuBar):
             + "</p></html>",
         )
 
+    @QtCore.Slot()
     def on_action_about_qt_triggered(self) -> None:
         QtWidgets.QMessageBox.aboutQt(self)
