@@ -1,6 +1,3 @@
-# coding: utf-8
-from __future__ import annotations
-
 from typing import Any, ClassVar, Sequence
 
 from pyqtgraph import CONFIG_OPTIONS, ColorButton

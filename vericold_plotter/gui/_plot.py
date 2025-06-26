@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from itertools import cycle
 from typing import Any, Iterable, TypeVar, cast

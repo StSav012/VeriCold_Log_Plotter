@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import annotations
-
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 __all__ = ["run"]

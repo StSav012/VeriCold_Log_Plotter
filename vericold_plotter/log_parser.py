@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
-from __future__ import annotations
-
-from pathlib import Path
+from os import PathLike
 from typing import BinaryIO, Final, cast
 
 _MAX_CHANNELS_COUNT: Final[int] = 52
@@ -13,7 +10,7 @@ try:
     import numpy as np
     from numpy.typing import NDArray
 
-    def parse(filename: str | Path | BinaryIO) -> tuple[list[str], NDArray[np.float64]]:
+    def parse(filename: str | PathLike[str] | BinaryIO) -> tuple[list[str], NDArray[np.float64]]:
         def _parse(file_handle: BinaryIO) -> tuple[list[str], NDArray[np.float64]]:
             file_handle.seek(0x1800 + 32)
             titles: list[str] = [
@@ -39,13 +36,13 @@ try:
         if isinstance(filename, BinaryIO):
             return _parse(filename)
         f_in: BinaryIO
-        with filename.open("rb") if isinstance(filename, Path) else open(filename, "rb") as f_in:
+        with open(filename, "rb") as f_in:
             return _parse(f_in)
 
 except ImportError:
     import struct
 
-    def parse(filename: str | Path | BinaryIO) -> tuple[list[str], list[list[float]]]:
+    def parse(filename: str | PathLike[str] | BinaryIO) -> tuple[list[str], list[list[float]]]:
         def _parse(file_handle: BinaryIO) -> tuple[list[str], list[list[float]]]:
             file_handle.seek(0x1800 + 32)
             titles: list[str] = list(
@@ -80,5 +77,5 @@ except ImportError:
         if isinstance(filename, BinaryIO):
             return _parse(filename)
         f_in: BinaryIO
-        with filename.open("rb") if isinstance(filename, Path) else open(filename, "rb") as f_in:
+        with open(filename, "rb") as f_in:
             return _parse(f_in)

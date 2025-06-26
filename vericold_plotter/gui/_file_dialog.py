@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import annotations
-
 import importlib.util
 import mimetypes
 from contextlib import suppress
