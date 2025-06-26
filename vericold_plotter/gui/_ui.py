@@ -256,9 +256,10 @@ class MainWindow(QtWidgets.QMainWindow):
             self.load_file(new_file_names)
 
     def export(self, export_all: bool = True) -> None:
-        data: NDArray[np.float64] = self.data_model.data
+        data: NDArray[np.float64]
         header: list[str]
         if export_all:
+            data = self.data_model.data
             header = self.data_model.header
         else:
             data, header = self.visible_data()
