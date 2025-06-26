@@ -15,8 +15,9 @@ if parse(QtCore.qVersion()) < parse("6"):
 qtbase_translator: QtCore.QTranslator = QtCore.QTranslator()
 if qtbase_translator.load(
     QtCore.QLocale(),
-        "qtbase", "_",
-        QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.LibraryPath.TranslationsPath),
+    "qtbase",
+    "_",
+    QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.LibraryPath.TranslationsPath),
 ):
     QtWidgets.QApplication.installTranslator(qtbase_translator)
 
