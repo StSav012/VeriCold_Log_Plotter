@@ -52,3 +52,5 @@ class DataModel:
             for i, c in enumerate(self._header):
                 if c.endswith("(K)"):  # temperature values must be positive
                     self._data[i, self._data[i] <= 0.0] = np.nan
+                if c.endswith(("(sec)", "(s)")):  # time values must be positive
+                    self._data[i, self._data[i] == 0.0] = np.nan
