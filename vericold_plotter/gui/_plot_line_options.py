@@ -84,10 +84,12 @@ class PlotLineOptions(QtWidgets.QWidget):
     def checked(self) -> bool:
         return self.check_box.isChecked()
 
+    @QtCore.Slot(bool)
     def on_check_toggled(self, new_state: bool) -> None:
         self.settings.line_enabled[self.options.currentText()] = new_state
         self.toggled.emit(self._index, new_state)
 
+    @QtCore.Slot(str)
     def on_combo_changed(self, new_text: str) -> None:
         self.settings.data_series_names[self._index] = new_text
         self.color_selector.setColor(
@@ -96,6 +98,7 @@ class PlotLineOptions(QtWidgets.QWidget):
         )
         self.itemChanged.emit(self._index, new_text)
 
+    @QtCore.Slot(QtWidgets.QPushButton)
     def on_color_changed(self, emitter: ColorButton) -> None:
         self.settings.line_colors[self.options.currentText()] = emitter.color()
         self.colorChanged.emit(self._index, emitter.color())

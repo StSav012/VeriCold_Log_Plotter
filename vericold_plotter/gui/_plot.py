@@ -71,6 +71,7 @@ class Plot(QtWidgets.QWidget):
         else:
             set_colors("w", "k")
 
+        @QtCore.Slot()
         def on_view_all_triggered() -> None:
             if not self.lines:
                 return
@@ -228,6 +229,7 @@ class Plot(QtWidgets.QWidget):
         self.end_time.dateTimeChanged.connect(on_end_time_changed)
         self.time_span.timeSpanChanged.connect(on_time_span_changed)
 
+    @QtCore.Slot()
     def auto_range_y(self) -> None:
         if not self.lines:
             return
