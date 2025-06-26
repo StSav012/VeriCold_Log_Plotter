@@ -98,7 +98,7 @@ class PlotLineOptions(QtWidgets.QWidget):
         )
         self.itemChanged.emit(self._index, new_text)
 
-    @QtCore.Slot(QtWidgets.QPushButton)
+    @QtCore.Slot(object)
     def on_color_changed(self, emitter: ColorButton) -> None:
         self.settings.line_colors[self.options.currentText()] = emitter.color()
         self.colorChanged.emit(self._index, emitter.color())
