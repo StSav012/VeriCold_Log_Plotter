@@ -14,10 +14,9 @@ def _timedelta_to_text(delta: timedelta) -> str:
     seconds_str: str = f"{seconds:02.0f}" if abs(seconds % 1.0) < 0.001 else f"{seconds:06.3f}"
     if days > 0:
         return f"{days}:{hours:02d}:{minutes:02d}:{seconds_str}"
-    elif hours > 0:
+    if hours > 0:
         return f"{hours:02d}:{minutes:02d}:{seconds_str}"
-    else:
-        return f"{minutes:02d}:{seconds_str}"
+    return f"{minutes:02d}:{seconds_str}"
 
 
 class TimeSpanEdit(QtWidgets.QAbstractSpinBox):
@@ -122,7 +121,7 @@ class TimeSpanEdit(QtWidgets.QAbstractSpinBox):
         seconds, ok = self.locale().toDouble(parts[-1])
         if not ok:
             return QtGui.QValidator.State.Invalid, text, cursor_position
-        elif seconds > 60.0:
+        if seconds > 60.0:
             return QtGui.QValidator.State.Intermediate, text, cursor_position
 
         if len(parts) >= 2:
@@ -130,7 +129,7 @@ class TimeSpanEdit(QtWidgets.QAbstractSpinBox):
             minutes, ok = self.locale().toUShort(parts[-2])
             if not ok:
                 return QtGui.QValidator.State.Invalid, text, cursor_position
-            elif minutes > 60:
+            if minutes > 60:
                 return QtGui.QValidator.State.Intermediate, text, cursor_position
 
         if len(parts) >= 3:

@@ -1,8 +1,8 @@
-from typing import Any, ClassVar, Sequence
+from typing import ClassVar, Sequence
 
 from pyqtgraph import CONFIG_OPTIONS, ColorButton
-from pyqtgraph.functions import mkColor
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
+from pyqtgraph.functions import mkColor
 
 from ._settings import Settings
 
@@ -23,7 +23,7 @@ class PlotLineOptions(QtWidgets.QWidget):
         settings: Settings,
         items: Sequence[str],
         parent: QtWidgets.QWidget | None = None,
-        *args: Any,
+        *args: object,
     ) -> None:
         super().__init__(parent, *args)
 

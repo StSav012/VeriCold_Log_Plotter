@@ -10,9 +10,9 @@ __all__ = ["Preferences"]
 
 
 class Preferences(QtWidgets.QDialog):
-    """GUI preferences dialog"""
+    """GUI preferences dialog."""
 
-    def __init__(self, settings: Settings, parent: QtWidgets.QWidget | None = None, *args: Any) -> None:
+    def __init__(self, settings: Settings, parent: QtWidgets.QWidget | None = None, *args: object) -> None:
         super().__init__(parent, *args)
 
         self.settings: Settings = settings
@@ -49,19 +49,17 @@ class Preferences(QtWidgets.QDialog):
                         if len(value2) == 1:
                             if isinstance(getattr(self.settings, value2[-1]), bool):
                                 check_box = QtWidgets.QCheckBox(key2, box)
-                                setattr(check_box, "callback", value2[-1])
+                                check_box.callback = value2[-1]
                                 check_box.setChecked(getattr(self.settings, value2[-1]))
                                 check_box.toggled.connect(
-                                    lambda x, sender=check_box: setattr(self.settings, getattr(sender, "callback"), x)
+                                    lambda x, sender=check_box: setattr(self.settings, sender.callback, x)
                                 )
                                 box_layout.addWidget(check_box)
                             elif isinstance(getattr(self.settings, value2[-1]), (Path, type(None))):
                                 open_file_path_entry = OpenFilePathEntry(getattr(self.settings, value2[-1]), box)
-                                setattr(open_file_path_entry, "callback", value2[-1])
+                                open_file_path_entry.callback = value2[-1]
                                 open_file_path_entry.changed.connect(
-                                    lambda x, sender=open_file_path_entry: setattr(
-                                        self.settings, getattr(sender, "callback"), x
-                                    )
+                                    lambda x, sender=open_file_path_entry: setattr(self.settings, sender.callback, x)
                                 )
                                 box_layout.addRow(key2, open_file_path_entry)
                             # no else
@@ -69,12 +67,12 @@ class Preferences(QtWidgets.QDialog):
                             value3 = value2[0]
                             if isinstance(value3, Sequence):
                                 combo_box = QtWidgets.QComboBox(box)
-                                setattr(combo_box, "callback", value2[-1])
+                                combo_box.callback = value2[-1]
                                 for item in value3:
                                     combo_box.addItem(item)
                                 combo_box.setCurrentIndex(getattr(self.settings, value2[-1]))
                                 combo_box.currentIndexChanged.connect(
-                                    lambda x, sender=combo_box: setattr(self.settings, getattr(sender, "callback"), x)
+                                    lambda x, sender=combo_box: setattr(self.settings, sender.callback, x)
                                 )
                                 box_layout.addRow(key2, combo_box)
                             # no else
@@ -83,14 +81,14 @@ class Preferences(QtWidgets.QDialog):
                             value3b = value2[1]
                             if isinstance(value3a, Sequence) and isinstance(value3b, Sequence):
                                 combo_box = QtWidgets.QComboBox(box)
-                                setattr(combo_box, "callback", value2[-1])
+                                combo_box.callback = value2[-1]
                                 for index, item in enumerate(value3a):
                                     combo_box.addItem(item, value3b[index])
                                 combo_box.setCurrentIndex(value3b.index(getattr(self.settings, value2[-1])))
                                 combo_box.currentIndexChanged.connect(
                                     lambda _, sender=combo_box: setattr(
                                         self.settings,
-                                        getattr(sender, "callback"),
+                                        sender.callback,
                                         sender.currentData(),
                                     )
                                 )
@@ -109,7 +107,7 @@ class Preferences(QtWidgets.QDialog):
                                     spin_box = QtWidgets.QSpinBox(box)
                                 else:
                                     spin_box = QtWidgets.QDoubleSpinBox(box)
-                                setattr(spin_box, "callback", value2[-1])
+                                spin_box.callback = value2[-1]
                                 if value3a.start is not None:
                                     spin_box.setMinimum(value3a.start)
                                 if value3a.stop is not None:
@@ -126,7 +124,7 @@ class Preferences(QtWidgets.QDialog):
                                 spin_box.valueChanged.connect(
                                     lambda _, sender=spin_box: setattr(
                                         self.settings,
-                                        getattr(sender, "callback"),
+                                        sender.callback,
                                         sender.value(),
                                     )
                                 )

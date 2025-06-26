@@ -34,7 +34,7 @@ class FileDialog(QtWidgets.QFileDialog):
 
         f: tuple[str, ...]
         all_supported_extensions: list[str] = []
-        for f in formats.keys():
+        for f in formats:
             all_supported_extensions.extend(ensure_prefix(_f, "*") for _f in f)
         format_lines: list[str] = [
             "".join(
@@ -57,7 +57,7 @@ class FileDialog(QtWidgets.QFileDialog):
             raise ValueError(f"Invalid data shape: {data.shape}")
 
         f_out: TextIO
-        with open(filename, "wt", newline=self.settings.line_end) as f_out:
+        with open(filename, "w", newline=self.settings.line_end) as f_out:
             f_out.write(self.settings.csv_separator.join(header) + "\n")
             f_out.writelines(
                 (
@@ -174,9 +174,8 @@ class FileDialog(QtWidgets.QFileDialog):
             self.settings.export_dialog_geometry = self.saveGeometry()
             new_file_name: str = self.selectedFiles()[0]
             new_file_mimetype: str | None = mimetypes.guess_type(new_file_name, strict=False)[0]
-            if new_file_mimetype is None or new_file_mimetype not in supported_mimetypes:
-                if supported_mimetypes:
-                    new_file_mimetype = supported_mimetypes[0]
+            if (new_file_mimetype is None or new_file_mimetype not in supported_mimetypes) and supported_mimetypes:
+                new_file_mimetype = supported_mimetypes[0]
 
             # ensure the filename extension is correct
             new_file_mimetype_extensions: list[str]

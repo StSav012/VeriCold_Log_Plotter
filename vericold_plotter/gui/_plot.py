@@ -1,12 +1,12 @@
 from datetime import datetime, timedelta
 from itertools import cycle
-from typing import Any, Iterable, TypeVar, cast
+from typing import Iterable, TypeVar, cast
 
 import numpy as np
 from numpy.typing import NDArray
 from pyqtgraph import (
-    AxisItem,
     CONFIG_OPTIONS,
+    AxisItem,
     DateAxisItem,
     PlotDataItem,
     PlotItem,
@@ -15,9 +15,9 @@ from pyqtgraph import (
     TextItem,
     ViewBox,
 )
-from pyqtgraph.functions import mkBrush, mkPen
 from pyqtgraph.GraphicsScene.mouseEvents import MouseClickEvent  # type: ignore
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
+from pyqtgraph.functions import mkBrush, mkPen
 
 from ._data_model import DataModel
 from ._time_span_edit import TimeSpanEdit
@@ -35,7 +35,7 @@ def normalize(a: NDArray[_T]) -> NDArray[_T]:
 
 
 class Plot(QtWidgets.QWidget):
-    def __init__(self, parent: QtWidgets.QWidget | None = None, *args: Any) -> None:
+    def __init__(self, parent: QtWidgets.QWidget | None = None, *args: object) -> None:
         super().__init__(parent, *args)
 
         self.setObjectName("plot_widget")
@@ -58,9 +58,9 @@ class Plot(QtWidgets.QWidget):
 
         def set_colors(background_color: str, foreground_color: str) -> None:
             ax: AxisItem
-            label: str
+            _label: str
             plot.setBackground(mkBrush(background_color))
-            for label, ax_d in self.canvas.axes.items():
+            for _label, ax_d in self.canvas.axes.items():
                 ax = ax_d["item"]
                 ax.setPen(foreground_color)
                 ax.setTextPen(foreground_color)
@@ -296,6 +296,7 @@ class Plot(QtWidgets.QWidget):
                         data_model[x_column],
                         normalize(data_model[y_column]) if normalized else data_model[y_column],
                         pen=color,
+                        label=y_column_name,
                     )
                 )
                 self.lines[-1].curve.opts["pen"].setCosmetic(True)
@@ -305,7 +306,14 @@ class Plot(QtWidgets.QWidget):
             for y_column_name, color, visible in zip(
                 y_column_names, cycle(colors or [CONFIG_OPTIONS["foreground"]]), visibility
             ):
-                self.lines.append(self.canvas.plot([], [], pen=color))
+                self.lines.append(
+                    self.canvas.plot(
+                        [],
+                        [],
+                        pen=color,
+                        label=y_column_name,
+                    )
+                )
                 self.lines[-1].curve.opts["pen"].setCosmetic(True)
                 self.lines[-1].setVisible(visible)
         # restore log state if set

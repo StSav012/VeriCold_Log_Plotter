@@ -22,7 +22,7 @@ def _load_file(filenames: Iterable[str]) -> tuple[NDArray[np.float64], list[str]
     for filename in filenames:
         try:
             titles, data = parse(filename)
-        except (IOError, RuntimeError) as ex:
+        except (OSError, RuntimeError) as ex:
             logger.warning(" ".join(repr(a) for a in ex.args))
             continue
         else:
@@ -56,7 +56,7 @@ def _save_csv(
         return
 
     f_out: TextIO
-    with open(filename, "wt", newline=line_end) as f_out:
+    with open(filename, "w", newline=line_end) as f_out:
         f_out.write(csv_separator.join(header) + "\n")
         f_out.writelines(
             ((csv_separator.join(f"{xii}" for xii in xi) if isinstance(xi, Iterable) else f"{xi}") + "\n")
@@ -113,11 +113,7 @@ def cli() -> int:
         pyexcelerate = None
 
     package: str | None = sys.modules["__main__"].__package__
-    prog: str
-    if package is not None:
-        prog = " ".join([sys.executable, "-m", package])
-    else:
-        prog = Path(sys.argv[0]).name
+    prog: str = Path(sys.argv[0]).name if package is None else " ".join([sys.executable, "-m", package])
     ap: argparse.ArgumentParser = argparse.ArgumentParser(
         prog=prog,
         description="Convert VeriCold log files to CSV" + (" or XLSX" if pyexcelerate is not None else ""),

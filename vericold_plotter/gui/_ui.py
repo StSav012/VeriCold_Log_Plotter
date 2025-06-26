@@ -7,6 +7,7 @@ from numpy.typing import NDArray
 from pyqtgraph import ComboBox, ViewBox
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
+from ..log_parser import parse
 from ._data_model import DataModel
 from ._file_dialog import FileDialog
 from ._menu_bar import MenuBar
@@ -14,7 +15,6 @@ from ._plot import Plot
 from ._plot_line_options import PlotLineOptions
 from ._preferences import Preferences
 from ._settings import Settings
-from ..log_parser import parse
 
 __all__ = ["MainWindow"]
 
@@ -178,7 +178,7 @@ class MainWindow(QtWidgets.QMainWindow):
             for file_name in _file_names:
                 try:
                     titles, data = parse(file_name)
-                except (IOError, RuntimeError) as ex:
+                except (OSError, RuntimeError) as ex:
                     self.status_bar.showMessage(" ".join(repr(a) for a in ex.args))
                     continue
                 else:
@@ -195,7 +195,7 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             try:
                 titles, data = parse(file_name)
-            except (IOError, RuntimeError) as ex:
+            except (OSError, RuntimeError) as ex:
                 self.status_bar.showMessage(" ".join(repr(a) for a in ex.args))
                 return False
         self.settings.opened_file_name = file_name
@@ -281,7 +281,7 @@ class MainWindow(QtWidgets.QMainWindow):
         try:
             fd: FileDialog = FileDialog(self.settings, self)
             fd.export(data, header)
-        except IOError as ex:
+        except OSError as ex:
             self.status_bar.showMessage(" ".join(ex.args))
         else:
             self.status_bar.showMessage(self.tr("Saved to {0}").format(self.settings.exported_file_name))
@@ -390,14 +390,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
         if self.file_created == Path(self.settings.opened_file_name).lstat().st_mtime:
             return
-        else:
-            self.file_created = Path(self.settings.opened_file_name).lstat().st_mtime
+        self.file_created = Path(self.settings.opened_file_name).lstat().st_mtime
 
         titles: list[str]
         data: NDArray[np.float64]
         try:
             titles, data = parse(self.settings.opened_file_name)
-        except (IOError, RuntimeError) as ex:
+        except (OSError, RuntimeError) as ex:
             self.status_bar.showMessage(" ".join(repr(a) for a in ex.args))
         else:
             self.data_model.set_data(data, titles)

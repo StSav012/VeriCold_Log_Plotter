@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Any, ClassVar, Sequence, cast
+from typing import ClassVar, Sequence, cast
 
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
@@ -8,7 +8,7 @@ __all__ = ["Settings"]
 
 
 class Settings(QtCore.QSettings):
-    """Convenient internal representation of the application settings"""
+    """Convenient internal representation of the application settings."""
 
     LINE_ENDS: ClassVar[dict[str, str]] = {
         "\n": QtWidgets.QApplication.translate("line end", r"Line Feed (\n)"),
@@ -23,7 +23,7 @@ class Settings(QtCore.QSettings):
         " ": QtWidgets.QApplication.translate("csv separator", r"space ( )"),
     }
 
-    def __init__(self, *args: Any) -> None:
+    def __init__(self, *args: object) -> None:
         super().__init__(*args)
         self.check_items_names: list[str] = []
         self.check_items_values: list[bool] = []

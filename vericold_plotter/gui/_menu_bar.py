@@ -66,7 +66,7 @@ class MenuBar(QtWidgets.QMenuBar):
         self.action_about_qt.setIcon(
             QtGui.QIcon.fromTheme(
                 "help-about-qt",
-                QtGui.QIcon(":/qt-project.org/q" "messagebox/images/qt" "logo-64.png"),
+                QtGui.QIcon(":/qt-project.org/qmessagebox/images/qtlogo-64.png"),
             )
         )
         self.action_about_qt.setMenuRole(QtGui.QAction.MenuRole.AboutQtRole)
@@ -130,17 +130,17 @@ class MenuBar(QtWidgets.QMenuBar):
             self.tr("About VeriCold Log Plotter"),
             "<html><p>"
             + (
-                (self.tr("VeriCold Log Plotter is version {0}").format(__version__) + "</p><p>")
+                (self.tr("VeriCold Log Plotter is version {}").format(__version__) + "</p><p>")
                 if __version__ is not None
                 else ""
             )
             + self.tr("VeriCold logfiles are created by Oxford Instruments plc.")
             + "</p><p>"
-            + self.tr("VeriCold Log Plotter is licensed under the {0}.").format(
-                "<a href='https://www.gnu.org/copyleft/lesser.html'>{0}</a>".format(self.tr("GNU LGPL version 3"))
+            + self.tr("VeriCold Log Plotter is licensed under the {}.").format(
+                "<a href='https://www.gnu.org/copyleft/lesser.html'>{}</a>".format(self.tr("GNU LGPL version 3"))
             )
             + "</p><p>"
-            + self.tr("The source code is available on {0}.").format(
+            + self.tr("The source code is available on {}.").format(
                 "<a href='https://github.com/StSav012/VeriCold_Log_Plotter'>GitHub</a>"
             )
             + "</p></html>",
