@@ -228,13 +228,19 @@ class MainWindow(QtWidgets.QMainWindow):
         header = [self.data_model.header[0]] + [o.option for o in self.line_options_y_axis if o.checked]
         data = self.data_model.data[[self.data_model.header.index(h) for h in header]]
 
-        # crop the visible rectangle
+        # ignore all-NaN lines
+        data = data[..., ~np.all(np.isnan(data[1:]), axis=0)]
+
+        # crop to the visible rectangle
         x_min: float
         x_max: float
         y_min: float
         y_max: float
         ((x_min, x_max), (y_min, y_max)) = self.plot.view_range
+        # ignore points outside the selected time range
         data = data[..., ((data[0] >= x_min) & (data[0] <= x_max))]
+        # ignore lines where all values are out of Y range
+        data = data[..., np.any((data[1:] >= y_min) & (data[1:] <= y_max), axis=0)]
         somehow_visible_lines: list[bool] = [True] + [bool(np.any((d >= y_min) & (d <= y_max))) for d in data[1:]]
         data = data[somehow_visible_lines]
         header = [h for h, b in zip(header, somehow_visible_lines) if b]
