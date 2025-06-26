@@ -193,7 +193,7 @@ class MainWindow(QtWidgets.QMainWindow):
             try:
                 titles, data = parse(file_name)
             except (OSError, RuntimeError) as ex:
-                self.status_bar.showMessage(" ".join(repr(a) for a in ex.args))
+                self.status_bar.showMessage(" ".join(str(a) for a in ex.args))
                 return False
         self.settings.opened_file_name = file_name
         self.data_model.set_data(data, titles)
