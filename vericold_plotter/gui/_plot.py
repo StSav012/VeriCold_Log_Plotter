@@ -288,6 +288,7 @@ class Plot(QtWidgets.QWidget):
         color: QtGui.QColor
         visible: bool
         y_column_names = tuple(y_column_names)
+        line: PlotDataItem
         if all(y_column_names):
             header: list[str] = data_model.header
             x_range: tuple[float, float] | None = None
@@ -317,7 +318,7 @@ class Plot(QtWidgets.QWidget):
                             max(float(x_data[good[-1]]), *x_range),
                         )
 
-                line: PlotDataItem = self.canvas.plot(
+                line = self.canvas.plot(
                     x_data,
                     normalize(data_model[y_column]) if normalized else data_model[y_column],
                     pen=color,
@@ -332,7 +333,7 @@ class Plot(QtWidgets.QWidget):
             for y_column_name, color, visible in zip(
                 y_column_names, cycle(colors or [CONFIG_OPTIONS["foreground"]]), visibility
             ):
-                line: PlotDataItem = self.canvas.plot(
+                line = self.canvas.plot(
                     [],
                     [],
                     pen=color,
