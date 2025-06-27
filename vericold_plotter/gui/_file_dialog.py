@@ -114,7 +114,9 @@ class FileDialog(QtWidgets.QFileDialog):
         self.setNameFilters(self._join_file_dialog_formats(supported_formats))
         self.setOption(QtWidgets.QFileDialog.Option.HideNameFilterDetails, True)
         self.setWindowTitle(self.tr("Open"))
-        self.selectFile(opened_filename)
+        if opened_filename:
+            self.setDirectory(opened_filename)
+            self.selectFile(opened_filename)
 
         if self.exec() and self.selectedFiles():
             self.settings.open_dialog_state = self.saveState()
@@ -154,6 +156,8 @@ class FileDialog(QtWidgets.QFileDialog):
         self.setMimeTypeFilters(supported_mimetypes)
         self.setOption(QtWidgets.QFileDialog.Option.HideNameFilterDetails, True)
         self.setWindowTitle(self.tr("Export"))
+        if exported_filename or opened_filename:
+            self.setDirectory(exported_filename or opened_filename)
         if selected_format is not None:
             try:
                 selected_mimetype: str = list(selected_format.mimetypes)[0]
