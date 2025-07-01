@@ -129,7 +129,11 @@ class Plot(QtWidgets.QWidget):
                     if self.canvas.axes["left"]["item"].logMode:
                         y = 10**y
                     # don't use `datetime.fromtimestamp` here directly to avoid OSError on Windows when x < 0
-                    cursor_balloon.setText(f"{_THE_BEGINNING_OF_TIME + timedelta(seconds=x)}\n{y}")
+                    x_str: str = f"{_THE_BEGINNING_OF_TIME + timedelta(seconds=x)}"
+                    y_str: str = (
+                        f"{round(y, max(0, 6 - int(np.floor(np.log10(abs(y))))))}" if abs(y) > 1e-6 else f"{y:.6e}"
+                    )
+                    cursor_balloon.setText("\n".join((x_str, y_str)))
                     balloon_border: QtCore.QRectF = cursor_balloon.boundingRect()
                     sx: float
                     sy: float
