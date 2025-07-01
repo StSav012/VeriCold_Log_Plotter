@@ -143,6 +143,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.settings.beginGroup("plot")
         self.plot.mouse_mode = cast(int, self.settings.value("mouseMode", ViewBox.PanMode, int))
+        self.plot.grid_x = cast(int, self.settings.value("gridX", 80, int))
+        self.plot.grid_y = cast(int, self.settings.value("gridY", 80, int))
         self.settings.endGroup()
 
     def save_settings(self) -> None:
@@ -153,6 +155,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.settings.beginGroup("plot")
         self.settings.setValue("mouseMode", self.plot.mouse_mode)
+        self.settings.setValue("gridX", self.plot.grid_x)
+        self.settings.setValue("gridY", self.plot.grid_y)
         self.settings.endGroup()
 
         self.settings.sync()

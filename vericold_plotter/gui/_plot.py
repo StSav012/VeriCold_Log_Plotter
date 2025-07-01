@@ -84,15 +84,46 @@ class Plot(QtWidgets.QWidget):
                 self.canvas.vb.autoRange(padding=0.0)
                 self.canvas.vb.setXRange(min_x, max_x, padding=0.0)
 
+        @QtCore.Slot()
+        def on_grid_menu_about_to_show() -> None:
+            self.x_grid_opacity.blockSignals(True)
+            self.x_grid_opacity.setValue(self.grid_x)
+            self.x_grid_opacity.blockSignals(False)
+            self.y_grid_opacity.blockSignals(True)
+            self.y_grid_opacity.setValue(self.grid_y)
+            self.y_grid_opacity.blockSignals(False)
+
+        @QtCore.Slot(float)
+        def on_x_grid_opacity_changed(opacity: float) -> None:
+            self.grid_x = opacity
+
+        @QtCore.Slot(float)
+        def on_y_grid_opacity_changed(opacity: float) -> None:
+            self.grid_y = opacity
+
         self.canvas.autoBtn.clicked.disconnect(self.canvas.autoBtnClicked)
         self.canvas.autoBtn.clicked.connect(self.auto_range_y)
 
-        menu_action: QtGui.QAction
-        for menu_action in self.canvas.ctrlMenu.actions():
-            if menu_action.text() not in [
-                QtCore.QCoreApplication.translate("PlotItem", "Grid"),
-            ]:
-                menu_action.deleteLater()
+        self.mouse_mode = ViewBox.RectMode
+
+        new_menu: QtWidgets.QMenu = QtWidgets.QMenu(QtCore.QCoreApplication.translate("PlotItem", "Grid"))
+        new_wa: QtWidgets.QWidgetAction = QtWidgets.QWidgetAction(new_menu)
+        new_w: QtWidgets.QWidget = QtWidgets.QWidget(new_menu)
+        new_w_l: QtWidgets.QFormLayout = QtWidgets.QFormLayout()
+        new_w.setLayout(new_w_l)
+        self.x_grid_opacity: QtWidgets.QSlider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal, new_w)
+        self.y_grid_opacity: QtWidgets.QSlider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal, new_w)
+        self.x_grid_opacity.setRange(0, 255)
+        self.y_grid_opacity.setRange(0, 255)
+        self.x_grid_opacity.valueChanged.connect(on_x_grid_opacity_changed)
+        self.y_grid_opacity.valueChanged.connect(on_y_grid_opacity_changed)
+        new_w_l.addRow(QtCore.QCoreApplication.translate("PlotItem", "Show X Grid"), self.x_grid_opacity)
+        new_w_l.addRow(QtCore.QCoreApplication.translate("PlotItem", "Show Y Grid"), self.y_grid_opacity)
+        new_wa.setDefaultWidget(new_w)
+        new_menu.addAction(new_wa)
+        new_menu.aboutToShow.connect(on_grid_menu_about_to_show)
+        self.canvas.vb.menu.addMenu(new_menu)
+        self.canvas.ctrlMenu = None
 
         self.canvas.vb.disableAutoRange()
         self.canvas.vb.setAutoVisible(x=True, y=True)
@@ -440,3 +471,24 @@ class Plot(QtWidgets.QWidget):
         if new_value not in (ViewBox.RectMode, ViewBox.PanMode):
             raise ValueError("Invalid mouse mode")
         self.canvas.vb.setMouseMode(new_value)
+
+    @property
+    def grid_x(self) -> int:
+        return int(cast(AxisItem, self.canvas.getAxis("bottom")).grid)
+
+    @grid_x.setter
+    def grid_x(self, grid_x: int) -> None:
+        if not (0 <= grid_x < 256):
+            raise ValueError("Invalid grid opacity")
+        cast(AxisItem, self.canvas.getAxis("bottom")).setGrid((grid_x > 0) and grid_x)
+        # print(self.canvas.ctrlMenu.children())
+
+    @property
+    def grid_y(self) -> int:
+        return int(cast(AxisItem, self.canvas.getAxis("left")).grid)
+
+    @grid_y.setter
+    def grid_y(self, grid_y: int) -> None:
+        if not (0 <= grid_y < 256):
+            raise ValueError("Invalid grid opacity")
+        cast(AxisItem, self.canvas.getAxis("left")).setGrid((grid_y > 0) and grid_y)
