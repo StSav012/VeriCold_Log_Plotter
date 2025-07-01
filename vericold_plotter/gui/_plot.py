@@ -219,6 +219,7 @@ class Plot(QtWidgets.QWidget):
         plot.leaveEvent = on_plot_left
         plot.scene().sigMouseClicked.connect(on_mouse_clicked)
 
+        @QtCore.Slot(QtCore.QDateTime)
         def on_start_time_changed(new_time: QtCore.QDateTime) -> None:
             self.time_span.blockSignals(True)
             self.time_span.from_two_q_date_time(new_time, self.end_time.dateTime())
@@ -229,6 +230,7 @@ class Plot(QtWidgets.QWidget):
                 padding=0.0,
             )
 
+        @QtCore.Slot(QtCore.QDateTime)
         def on_end_time_changed(new_time: QtCore.QDateTime) -> None:
             self.start_time.blockSignals(True)
             if new_time.addMSecs(-round(self.time_span.total_seconds * 1000)) >= self.start_time.minimumDateTime():
@@ -245,6 +247,7 @@ class Plot(QtWidgets.QWidget):
                 padding=0.0,
             )
 
+        @QtCore.Slot(timedelta)
         def on_time_span_changed(delta: timedelta) -> None:
             self.start_time.blockSignals(True)
             if (
