@@ -163,7 +163,11 @@ class MainWindow(QtWidgets.QMainWindow):
             translator.load(str(self.settings.translation_path))
             QtWidgets.QApplication.instance().installTranslator(translator)
 
-    def load_file(self, file_name: str | Iterable[str], check_file_updates: bool = False) -> bool:
+    def load_file(
+        self,
+        file_name: str | Iterable[str],
+        check_file_updates: bool | None = None,
+    ) -> bool:
         if not file_name:
             return False
         titles: list[str]
@@ -220,7 +224,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.menu_bar.action_auto_reload.setEnabled(True)
         self.status_bar.showMessage(self.tr("Ready"))
         self.file_created = Path(self.settings.opened_file_name).lstat().st_mtime
-        self.check_file_updates = check_file_updates
+        if check_file_updates is not None:
+            self.check_file_updates = check_file_updates
         self.setWindowTitle(f"{file_name} — {MainWindow._initial_window_title}")
         return True
 
