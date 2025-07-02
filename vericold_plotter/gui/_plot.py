@@ -608,6 +608,8 @@ class Plot(QtWidgets.QWidget):
             label=y_column_name,
         )
 
+        self.canvas.scene().update()
+
     def set_line_visible(self, index: int, visible: bool) -> None:
         self.lines[index].setVisible(visible)
 
