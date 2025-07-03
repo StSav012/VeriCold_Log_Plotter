@@ -77,7 +77,7 @@ def required_packages() -> list[str]:
             PackageRequirement(
                 package_name="PySide6-Essentials",
                 min_version="6.2.0",
-                blacklisted_versions=("6.8.0", "6.8.0.1"),
+                blacklisted_versions=("6.8.0", "6.8.0.1", "6.9.1"),
             ),
             PackageRequirement(package_name="PyQt6", min_version="6.2.0"),
             PackageRequirement(package_name="PyQt5", min_version="5.15.0"),
