@@ -232,11 +232,23 @@ class Plot(QtWidgets.QWidget):
             self.time_span.from_two_q_date_time(self.start_time.dateTime(), self.end_time.dateTime())
             self.start_y.setRange(-np.inf, np.inf)
             self.end_y.setRange(-np.inf, np.inf)
-            self.start_y.setValue(min(y_lim))
-            self.end_y.setValue(max(y_lim))
-            self.y_span.setValue(max(y_lim) - min(y_lim))
-            self.start_y.setMaximum(max(y_lim))
-            self.end_y.setMinimum(min(y_lim))
+            start: float = min(y_lim)
+            end: float = max(y_lim)
+            span: float = end - start
+            decimals: int = max(
+                2,
+                2 - (int(np.floor(np.log10(abs(start)))) if start != 0.0 else 0),
+                2 - (int(np.floor(np.log10(abs(end)))) if end != 0.0 else 0),
+                2 - (int(np.floor(np.log10(abs(span)))) if span != 0.0 else 0),
+            )
+            self.start_y.setDecimals(decimals)
+            self.end_y.setDecimals(decimals)
+            self.y_span.setDecimals(decimals)
+            self.start_y.setValue(start)
+            self.end_y.setValue(end)
+            self.y_span.setValue(span)
+            self.start_y.setMaximum(end)
+            self.end_y.setMinimum(start)
             self.y_span.blockSignals(False)
             self.end_y.blockSignals(False)
             self.start_y.blockSignals(False)
