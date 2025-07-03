@@ -171,9 +171,9 @@ class Plot(QtWidgets.QWidget):
         self.start_y.setDisabled(True)
         self.end_y.setDisabled(True)
         self.y_span.setDisabled(True)
-        self.start_y.setRange(-np.inf, np.inf)
-        self.end_y.setRange(-np.inf, np.inf)
-        self.y_span.setRange(0.01, np.inf)
+        self.start_y.setRange(0 if self.canvas.getAxis("left").logMode else -np.inf, np.inf)
+        self.end_y.setRange(0 if self.canvas.getAxis("left").logMode else -np.inf, np.inf)
+        self.y_span.setRange(10 ** -self.y_span.decimals(), np.inf)
         y_range_layout.addWidget(self.end_y, 0, QtCore.Qt.AlignmentFlag.AlignTop)
         y_range_layout.addWidget(self.y_span, 0, QtCore.Qt.AlignmentFlag.AlignVCenter)
         y_range_layout.addWidget(self.start_y, 0, QtCore.Qt.AlignmentFlag.AlignBottom)
@@ -215,24 +215,27 @@ class Plot(QtWidgets.QWidget):
             else:
                 cursor_balloon.setVisible(False)
 
-        def on_lim_changed(arg: tuple[PlotWidget, list[list[float]]]) -> None:
-            rect: list[list[float]] = arg[1]
-            x_lim: list[float]
-            y_lim: list[float]
-            x_lim, y_lim = rect
+        def on_view_range_changed(arg: tuple[PlotWidget, list[list[float]]]) -> None:
+            view_range: list[list[float]] = arg[1]
+            x_min: float
+            x_max: float
+            y_min: float
+            y_max: float
+            [[x_min, x_max], [y_min, y_max]] = view_range
             self.start_time.blockSignals(True)
             self.end_time.blockSignals(True)
             self.time_span.blockSignals(True)
             self.start_y.blockSignals(True)
             self.end_y.blockSignals(True)
             self.y_span.blockSignals(True)
-            self.start_time.setDateTime(QtCore.QDateTime.fromMSecsSinceEpoch(round(min(x_lim) * 1000)))
-            self.end_time.setDateTime(QtCore.QDateTime.fromMSecsSinceEpoch(round(max(x_lim) * 1000)))
+            self.start_time.setDateTime(QtCore.QDateTime.fromMSecsSinceEpoch(round(x_min * 1000)))
+            self.end_time.setDateTime(QtCore.QDateTime.fromMSecsSinceEpoch(round(x_max * 1000)))
             self.time_span.from_two_q_date_time(self.start_time.dateTime(), self.end_time.dateTime())
-            self.start_y.setRange(-np.inf, np.inf)
-            self.end_y.setRange(-np.inf, np.inf)
-            start: float = min(y_lim)
-            end: float = max(y_lim)
+            log_mode: bool = self.canvas.getAxis("left").logMode
+            self.start_y.setRange(0 if log_mode else -np.inf, np.inf)
+            self.end_y.setRange(0 if log_mode else -np.inf, np.inf)
+            start: float = 10**y_min if log_mode else y_min
+            end: float = 10 * y_max if log_mode else y_max
             span: float = end - start
             decimals: int = max(
                 2,
@@ -273,7 +276,7 @@ class Plot(QtWidgets.QWidget):
         self._axis_range_changed_signal_proxy: SignalProxy = SignalProxy(
             plot.sigRangeChanged,
             rateLimit=10,
-            slot=on_lim_changed,
+            slot=on_view_range_changed,
         )
         self._last_time_range_rolled: datetime = datetime.fromtimestamp(0)
         plot.leaveEvent = on_plot_left
@@ -329,6 +332,14 @@ class Plot(QtWidgets.QWidget):
 
         @QtCore.Slot(float)
         def on_start_y_changed(start: float) -> None:
+            log_mode: bool = self.canvas.getAxis("left").logMode
+            if log_mode and start <= 0.0:
+                start = 10.0 ** self.canvas.vb.viewRange()[1][0]
+                self.start_y.blockSignals(True)
+                self.start_y.setValue(start)
+                self.start_y.blockSignals(False)
+                return
+
             end: float = self.end_y.value()
             span: float = end - start
             decimals: int = max(
@@ -338,13 +349,16 @@ class Plot(QtWidgets.QWidget):
                 2 - (int(np.floor(np.log10(abs(span)))) if span != 0.0 else 0),
             )
             if span == 0.0:
-                end = start + self.y_span.value()
+                span = self.y_span.value()
+                end = start + span
                 decimals = max(
                     2,
                     2 - (int(np.floor(np.log10(abs(start)))) if start != 0.0 else 0),
                     2 - (int(np.floor(np.log10(abs(end)))) if end != 0.0 else 0),
                 )
-                span = self.y_span.value()
+            if log_mode and end <= 0.0:
+                end = self.end_y.value()
+                span = end - start
             self.start_y.blockSignals(True)
             self.start_y.setDecimals(decimals)
             self.start_y.setValue(start)
@@ -359,10 +373,22 @@ class Plot(QtWidgets.QWidget):
             self.y_span.setMinimum(10.0**-decimals)
             self.y_span.blockSignals(False)
             self.end_y.setMinimum(start)
-            self.canvas.vb.setYRange(start, end, padding=0.0)
+            with self._axis_range_changed_signal_proxy.block():
+                if log_mode:
+                    self.canvas.vb.setYRange(np.log10(start), np.log10(end), padding=0.0)
+                else:
+                    self.canvas.vb.setYRange(start, end, padding=0.0)
 
         @QtCore.Slot(float)
         def on_end_y_changed(end: float) -> None:
+            log_mode: bool = self.canvas.getAxis("left").logMode
+            if log_mode and end <= 0.0:
+                end = 10.0 ** self.canvas.vb.viewRange()[1][1]
+                self.end_y.blockSignals(True)
+                self.end_y.setValue(end)
+                self.end_y.blockSignals(False)
+                return
+
             start: float = self.start_y.value()
             span: float = end - start
             decimals: int = max(
@@ -372,13 +398,16 @@ class Plot(QtWidgets.QWidget):
                 2 - (int(np.floor(np.log10(abs(span)))) if span != 0.0 else 0),
             )
             if span == 0.0:
-                start = end - self.y_span.value()
+                span = self.y_span.value()
+                start = end - span
                 decimals = max(
                     2,
                     2 - (int(np.floor(np.log10(abs(start)))) if start != 0.0 else 0),
                     2 - (int(np.floor(np.log10(abs(end)))) if end != 0.0 else 0),
                 )
-                span = self.y_span.value()
+            if log_mode and start <= 0.0:
+                start = self.start_y.value()
+                span = end - start
             self.start_y.blockSignals(True)
             self.start_y.setDecimals(decimals)
             self.start_y.setValue(start)
@@ -393,17 +422,29 @@ class Plot(QtWidgets.QWidget):
             self.y_span.setMinimum(10.0**-decimals)
             self.y_span.blockSignals(False)
             self.start_y.setMaximum(end)
-            self.canvas.vb.setYRange(start, end, padding=0.0)
+            with self._axis_range_changed_signal_proxy.block():
+                if log_mode:
+                    self.canvas.vb.setYRange(np.log10(start), np.log10(end), padding=0.0)
+                else:
+                    self.canvas.vb.setYRange(start, end, padding=0.0)
 
         @QtCore.Slot(float)
         def on_y_span_changed(span: float) -> None:
             self.start_y.blockSignals(True)
             self.end_y.blockSignals(True)
-            self.start_y.setRange(-np.inf, np.inf)
-            self.end_y.setRange(-np.inf, np.inf)
+            log_mode: bool = self.canvas.getAxis("left").logMode
+            self.start_y.setRange(0.0 if log_mode else -np.inf, np.inf)
+            self.end_y.setRange(0.0 if log_mode else -np.inf, np.inf)
             center: float = (self.start_y.value() + self.end_y.value()) / 2.0
             start: float = center - span / 2.0
             end: float = center + span / 2.0
+            if log_mode:
+                if start <= 0.0:
+                    start = self.start_y.value()
+                    span = end - start
+                if end <= 0.0:
+                    end = self.end_y.value()
+                    span = end - start
             self.start_y.setValue(start)
             self.end_y.setValue(end)
             self.start_y.setMaximum(end)
@@ -420,7 +461,11 @@ class Plot(QtWidgets.QWidget):
             self.y_span.setMinimum(10.0**-decimals)
             self.end_y.blockSignals(False)
             self.start_y.blockSignals(False)
-            self.canvas.vb.setYRange(start, end, padding=0.0)
+            with self._axis_range_changed_signal_proxy.block():
+                if self.canvas.getAxis("left").logMode:
+                    self.canvas.vb.setYRange(np.log10(start), np.log10(end), padding=0.0)
+                else:
+                    self.canvas.vb.setYRange(start, end, padding=0.0)
 
         self.start_time.dateTimeChanged.connect(on_start_time_changed)
         self.end_time.dateTimeChanged.connect(on_end_time_changed)
