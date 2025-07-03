@@ -32,9 +32,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.settings: Settings = Settings("SavSoft", "VeriCold Plotter", self)
         self.install_translation()
 
-        self.central_widget: QtWidgets.QWidget = QtWidgets.QWidget(self)
-        self.main_layout: QtWidgets.QGridLayout = QtWidgets.QGridLayout(self.central_widget)
-
         self.dock_settings: QtWidgets.QDockWidget = QtWidgets.QDockWidget(self)
         self.box_settings: QtWidgets.QWidget = QtWidgets.QWidget(self.dock_settings)
         self.settings_layout: QtWidgets.QVBoxLayout = QtWidgets.QVBoxLayout(self.box_settings)
@@ -74,10 +71,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.setObjectName("main_window")
         self.resize(640, 480)
-        self.central_widget.setObjectName("central_widget")
-        self.main_layout.setObjectName("main_layout")
-        self.main_layout.addWidget(self.plot)
-        self.setCentralWidget(self.central_widget)
+        self.setCentralWidget(self.plot)
         self.setMenuBar(self.menu_bar)
         self.status_bar.setObjectName("status_bar")
         self.setStatusBar(self.status_bar)
