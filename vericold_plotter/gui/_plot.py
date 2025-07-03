@@ -597,9 +597,15 @@ class Plot(QtWidgets.QWidget):
                             max(float(x_data[good[-1]]), *x_range),
                         )
 
+                changing: NDArray[np.bool_] = (
+                    np.concatenate(([True], np.diff(x_data) != 0.0))
+                    if x_data.shape[0] > 1
+                    else np.full_like(x_data, True, dtype=np.bool_)
+                )
+
                 line = self.canvas.plot(
-                    x_data,
-                    normalize(data_model[y_column]) if normalized else data_model[y_column],
+                    x_data[changing],
+                    normalize(data_model[y_column][changing]) if normalized else data_model[y_column][changing],
                     pen=color,
                     label=y_column_name,
                 )
@@ -695,9 +701,16 @@ class Plot(QtWidgets.QWidget):
             self.canvas.vb.setXRange(min(x_axis.range) + shift, max(x_axis.range) + shift, padding=0.0)
             self._last_time_range_rolled = datetime.now()
 
+        x_data: NDArray[np.float64] = data_model[x_column]
+        changing: NDArray[np.bool_] = (
+            np.concatenate(([True], np.diff(x_data) != 0.0))
+            if x_data.shape[0] > 1
+            else np.full_like(x_data, True, dtype=np.bool_)
+        )
+
         self.lines[index].setData(
-            data_model[x_column],
-            normalize(data_model[y_column]) if normalized else data_model[y_column],
+            x_data[changing],
+            normalize(data_model[y_column][changing]) if normalized else data_model[y_column][changing],
             pen=color,
             label=y_column_name,
         )
