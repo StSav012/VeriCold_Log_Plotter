@@ -21,6 +21,7 @@ def _timedelta_to_text(delta: timedelta) -> str:
 
 class TimeSpanEdit(QtWidgets.QAbstractSpinBox):
     timeSpanChanged: ClassVar[QtCore.Signal] = QtCore.Signal(timedelta, name="timeSpanChanged")
+    doubleClicked: QtCore.Signal = QtCore.Signal(name="doubleClicked")
 
     _MAX_TEXT: ClassVar[str] = _timedelta_to_text(timedelta.max)
 
@@ -31,7 +32,14 @@ class TimeSpanEdit(QtWidgets.QAbstractSpinBox):
 
         self._last_correct_delta: timedelta = timedelta(days=1)
 
+        self.lineEdit().installEventFilter(self)
+
         self.editingFinished.connect(self._on_edit_finished)
+
+    def eventFilter(self, sender: QtCore.QObject, event: QtCore.QEvent) -> bool:
+        if event.type() == QtCore.QEvent.Type.MouseButtonDblClick and sender is self.lineEdit():
+            self.doubleClicked.emit()
+        return super().eventFilter(sender, event)
 
     def fixup(self, text: str) -> None:
         text = ":".join(part or "00" for part in text.split(":"))

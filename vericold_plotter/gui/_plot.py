@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from functools import partial
 from itertools import cycle
 from typing import Iterable, TypeVar, cast
 
@@ -20,6 +21,7 @@ from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 from pyqtgraph.functions import mkBrush, mkPen
 
 from ._data_model import DataModel
+from ._double_click_spin_box import DoubleClickDateTimeEdit, DoubleClickDoubleSpinBox
 from ._time_span_edit import TimeSpanEdit
 
 __all__ = ["Plot"]
@@ -101,9 +103,6 @@ class Plot(QtWidgets.QWidget):
         def on_y_grid_opacity_changed(opacity: float) -> None:
             self.grid_y = opacity
 
-        self.canvas.autoBtn.clicked.disconnect(self.canvas.autoBtnClicked)
-        self.canvas.autoBtn.clicked.connect(self.auto_range_y)
-
         self.mouse_mode = ViewBox.RectMode
 
         for action in cast(QtWidgets.QMenu, self.canvas.vb.menu).actions():
@@ -149,8 +148,8 @@ class Plot(QtWidgets.QWidget):
         x_range_layout: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout()
         layout.addLayout(x_range_layout, 1, 1)
 
-        self.start_time: QtWidgets.QDateTimeEdit = QtWidgets.QDateTimeEdit(self)
-        self.end_time: QtWidgets.QDateTimeEdit = QtWidgets.QDateTimeEdit(self)
+        self.start_time: DoubleClickDateTimeEdit = DoubleClickDateTimeEdit(self)
+        self.end_time: DoubleClickDateTimeEdit = DoubleClickDateTimeEdit(self)
         self.time_span: TimeSpanEdit = TimeSpanEdit(self)
         self.start_time.setDisabled(True)
         self.end_time.setDisabled(True)
@@ -166,9 +165,9 @@ class Plot(QtWidgets.QWidget):
         y_range_layout: QtWidgets.QVBoxLayout = QtWidgets.QVBoxLayout()
         layout.addLayout(y_range_layout, 0, 0)
 
-        self.start_y: QtWidgets.QDoubleSpinBox = QtWidgets.QDoubleSpinBox(self)
-        self.end_y: QtWidgets.QDoubleSpinBox = QtWidgets.QDoubleSpinBox(self)
-        self.y_span: QtWidgets.QDoubleSpinBox = QtWidgets.QDoubleSpinBox(self)
+        self.start_y: DoubleClickDoubleSpinBox = DoubleClickDoubleSpinBox(self)
+        self.end_y: DoubleClickDoubleSpinBox = DoubleClickDoubleSpinBox(self)
+        self.y_span: DoubleClickDoubleSpinBox = DoubleClickDoubleSpinBox(self)
         self.start_y.setDisabled(True)
         self.end_y.setDisabled(True)
         self.y_span.setDisabled(True)
@@ -263,7 +262,7 @@ class Plot(QtWidgets.QWidget):
 
         def on_mouse_clicked(event: MouseClickEvent) -> None:
             if event.double():
-                self.auto_range_y()
+                self.auto_range_y(start=True, end=True)
             event.accept()
 
         self._mouse_moved_signal_proxy: SignalProxy = SignalProxy(
@@ -429,9 +428,45 @@ class Plot(QtWidgets.QWidget):
         self.start_y.valueChanged.connect(on_start_y_changed)
         self.end_y.valueChanged.connect(on_end_y_changed)
         self.y_span.valueChanged.connect(on_y_span_changed)
+        self.start_time.doubleClicked.connect(partial(self.auto_range_x, start=True, end=False))
+        self.end_time.doubleClicked.connect(partial(self.auto_range_x, start=False, end=True))
+        self.time_span.doubleClicked.connect(partial(self.auto_range_x, start=True, end=True))
+        self.start_y.doubleClicked.connect(partial(self.auto_range_y, start=True, end=False))
+        self.end_y.doubleClicked.connect(partial(self.auto_range_y, start=False, end=True))
+        self.y_span.doubleClicked.connect(partial(self.auto_range_y, start=True, end=True))
 
-    @QtCore.Slot()
-    def auto_range_y(self) -> None:
+    def auto_range_x(self, start: bool = True, end: bool = True) -> None:
+        if not self.lines:
+            return
+        line: PlotDataItem
+        visible_data: list[NDArray[np.float64]] = []
+        x_min: float
+        x_max: float
+        y_min: float
+        y_max: float
+        [[x_min, x_max], [y_min, y_max]] = self.canvas.vb.viewRange()
+        for line in self.lines:
+            if not line.isVisible() or line.xData is None or not line.xData.size:
+                continue
+            visible_data.append(line.xData[(line.yData >= y_min) & (line.yData <= y_max)])
+        if not visible_data:
+            return
+        min_x: float = x_min
+        max_x: float = x_max
+        if self.canvas.getAxis("bottom").logMode:
+            positive_data: list[NDArray[np.float64]] = [d[d > 0] for d in visible_data]
+            if start:
+                min_x = np.log10(min(cast(float, np.nanmin(d)) for d in positive_data))
+            if end:
+                max_x = np.log10(max(cast(float, np.nanmax(d)) for d in positive_data))
+        else:
+            if start:
+                min_x = min(cast(float, np.nanmin(d)) for d in visible_data)
+            if end:
+                max_x = max(cast(float, np.nanmax(d)) for d in visible_data)
+        self.canvas.vb.setXRange(min_x, max_x, padding=0.0)
+
+    def auto_range_y(self, start: bool = True, end: bool = True) -> None:
         if not self.lines:
             return
         line: PlotDataItem
@@ -444,20 +479,22 @@ class Plot(QtWidgets.QWidget):
         for line in self.lines:
             if not line.isVisible() or line.yData is None or not line.yData.size:
                 continue
-            visible_data_piece: NDArray[np.float64] = line.yData[(line.xData >= x_min) & (line.xData <= x_max)]
-            if np.any((visible_data_piece >= y_min) & (visible_data_piece <= y_max)):
-                visible_data.append(visible_data_piece)
+            visible_data.append(line.yData[(line.xData >= x_min) & (line.xData <= x_max)])
         if not visible_data:
             return
-        min_y: float
-        max_y: float
-        if self.canvas.axes["left"]["item"].logMode:
+        min_y: float = y_min
+        max_y: float = y_max
+        if self.canvas.getAxis("left").logMode:
             positive_data: list[NDArray[np.float64]] = [d[d > 0] for d in visible_data]
-            min_y = np.log10(min(cast(float, np.nanmin(d)) for d in positive_data))
-            max_y = np.log10(max(cast(float, np.nanmax(d)) for d in positive_data))
+            if start:
+                min_y = np.log10(min(cast(float, np.nanmin(d)) for d in positive_data))
+            if end:
+                max_y = np.log10(max(cast(float, np.nanmax(d)) for d in positive_data))
         else:
-            min_y = min(cast(float, np.nanmin(d)) for d in visible_data)
-            max_y = max(cast(float, np.nanmax(d)) for d in visible_data)
+            if start:
+                min_y = min(cast(float, np.nanmin(d)) for d in visible_data)
+            if end:
+                max_y = max(cast(float, np.nanmax(d)) for d in visible_data)
         self.canvas.vb.setYRange(min_y, max_y, padding=0.0)
 
     def clear(self) -> None:
