@@ -86,13 +86,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.dock_settings.setObjectName("dock_settings")
         self.dock_settings.setAllowedAreas(QtCore.Qt.DockWidgetArea.AllDockWidgetAreas)
-        self.dock_settings.setFeatures(
-            cast(
-                QtWidgets.QDockWidget.DockWidgetFeature,
-                self.dock_settings.features() & ~self.dock_settings.DockWidgetFeature.DockWidgetClosable,
-            )
-        )
         self.dock_settings.setWidget(self.box_settings)
+        self.menu_bar.menu_view.addAction(self.dock_settings.toggleViewAction())
+
         self.layout_y_axis.addRow(self.tr("y-axis:"), self.combo_y_axis)
         self.settings_layout.addLayout(self.layout_y_axis)
         cb: PlotLineOptions
@@ -101,7 +97,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.addDockWidget(QtCore.Qt.DockWidgetArea.RightDockWidgetArea, self.dock_settings)
 
         self.setWindowTitle(MainWindow._initial_window_title)
-        self.dock_settings.setWindowTitle(self.tr("Options"))
+        self.dock_settings.setWindowTitle(self.tr("&Options"))
 
         self.load_settings()
 

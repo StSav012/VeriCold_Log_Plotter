@@ -8,6 +8,7 @@ class MenuBar(QtWidgets.QMenuBar):
         super().__init__(parent=parent)
 
         self.menu_file: QtWidgets.QMenu = QtWidgets.QMenu(self)
+        self.menu_view: QtWidgets.QMenu = QtWidgets.QMenu(self)
         self.menu_about: QtWidgets.QMenu = QtWidgets.QMenu(self)
         self.action_open: QtGui.QAction = QtGui.QAction(self)
         self.action_export: QtGui.QAction = QtGui.QAction(self)
@@ -24,6 +25,7 @@ class MenuBar(QtWidgets.QMenuBar):
     def setup_ui(self) -> None:
         self.setObjectName("menu_bar")
         self.menu_file.setObjectName("menu_file")
+        self.menu_file.setObjectName("menu_view")
         self.menu_about.setObjectName("menu_about")
 
         self.action_open.setIcon(
@@ -83,6 +85,7 @@ class MenuBar(QtWidgets.QMenuBar):
         self.menu_about.addAction(self.action_about)
         self.menu_about.addAction(self.action_about_qt)
         self.addAction(self.menu_file.menuAction())
+        self.addAction(self.menu_view.menuAction())
         self.addAction(self.menu_about.menuAction())
 
         self.action_export.setEnabled(False)
@@ -107,17 +110,18 @@ class MenuBar(QtWidgets.QMenuBar):
         self.action_about.triggered.connect(self.on_action_about_triggered)
         self.action_about_qt.triggered.connect(self.on_action_about_qt_triggered)
 
-        self.menu_file.setTitle(self.tr("File"))
-        self.menu_about.setTitle(self.tr("About"))
-        self.action_open.setText(self.tr("Open…"))
-        self.action_export.setText(self.tr("Export…"))
-        self.action_export_visible.setText(self.tr("Export Visible…"))
-        self.action_reload.setText(self.tr("Reload"))
-        self.action_auto_reload.setText(self.tr("Auto Reload"))
-        self.action_preferences.setText(self.tr("Preferences…"))
-        self.action_quit.setText(self.tr("Quit"))
-        self.action_about.setText(self.tr("About"))
-        self.action_about_qt.setText(self.tr("About Qt"))
+        self.menu_file.setTitle(self.tr("&File"))
+        self.menu_view.setTitle(self.tr("&View"))
+        self.menu_about.setTitle(self.tr("&About"))
+        self.action_open.setText(self.tr("&Open…"))
+        self.action_export.setText(self.tr("&Export…"))
+        self.action_export_visible.setText(self.tr("Export &Visible…"))
+        self.action_reload.setText(self.tr("&Reload"))
+        self.action_auto_reload.setText(self.tr("&Auto Reload"))
+        self.action_preferences.setText(self.tr("&Preferences…"))
+        self.action_quit.setText(self.tr("&Quit"))
+        self.action_about.setText(self.tr("&About"))
+        self.action_about_qt.setText(self.tr("About &Qt"))
 
     @QtCore.Slot()
     def on_action_about_triggered(self) -> None:
