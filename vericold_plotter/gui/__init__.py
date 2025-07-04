@@ -1,3 +1,5 @@
+import sys
+
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 __all__ = ["run"]
@@ -22,6 +24,39 @@ if not hasattr(QtCore.QLibraryInfo, "LibraryPath"):  # PyQt5, PySide2
 
 if not hasattr(QtCore, "Slot"):  # PyQt5, PyQt6
     QtCore.Slot = QtCore.pyqtSlot  # type: ignore
+
+
+if sys.platform == "win32":
+
+    class DockWidget(QtWidgets.QDockWidget):
+        """A `QtWidgets.QDockWidget` that doesn't display an `&` in the title.
+
+        The issue occurs on Windows OS.
+        """
+
+        def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
+            super().__init__(parent)
+
+            @QtCore.Slot()
+            def on_top_level_changed(_top_level: bool) -> None:
+                if self.windowHandle() is not None:
+                    self.windowHandle().setTitle(self.windowTitle().replace("&", ""))
+
+            self.topLevelChanged.connect(on_top_level_changed)
+
+        def restoreGeometry(self, geometry: QtCore.QByteArray | bytes | bytearray | memoryview) -> bool:
+            res: bool = super().restoreGeometry(geometry)
+            if self.windowHandle() is not None:
+                self.windowHandle().setTitle(self.windowTitle().replace("&", ""))
+            return res
+
+        def setWindowTitle(self, title: str) -> None:
+            super().setWindowTitle(title.replace("&", ""))
+            if self.windowHandle() is not None:
+                self.windowHandle().setTitle(title.replace("&", ""))
+            self.toggleViewAction().setText(title)
+
+    QtWidgets.QDockWidget = DockWidget
 
 
 def run() -> int:
