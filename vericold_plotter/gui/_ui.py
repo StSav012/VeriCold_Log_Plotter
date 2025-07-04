@@ -174,7 +174,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 try:
                     titles, data = parse(file_name)
                 except (OSError, RuntimeError) as ex:
-                    self.status_bar.showMessage(" ".join(repr(a) for a in ex.args))
+                    self.status_bar.showMessage(" ".join(str(a) for a in ex.args))
                     continue
                 else:
                     all_titles.append(titles)
