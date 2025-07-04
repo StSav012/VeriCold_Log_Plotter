@@ -1,4 +1,3 @@
-from datetime import datetime
 from pathlib import Path
 from typing import ClassVar, Iterable, Sequence, cast, final
 
@@ -216,7 +215,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.menu_bar.action_export_visible.setEnabled(True)
         self.menu_bar.action_reload.setEnabled(True)
         self.menu_bar.action_auto_reload.setEnabled(True)
-        self.status_bar.showMessage(self.tr("Ready"))
+        now: QtCore.QDateTime = QtCore.QDateTime.currentDateTime()
+        self.status_bar.showMessage(
+            self.tr("Loaded {date} at {time}").format(
+                date=self.locale().toString(now.date(), QtCore.QLocale.FormatType.NarrowFormat),
+                time=self.locale().toString(now.time(), QtCore.QLocale.FormatType.NarrowFormat),
+            )
+        )
         self.file_created = Path(self.settings.opened_file_name).lstat().st_mtime
         if check_file_updates is not None:
             self.check_file_updates = check_file_updates
@@ -383,6 +388,10 @@ class MainWindow(QtWidgets.QMainWindow):
                     roll=True,
                 )
 
-            self.status_bar.showMessage(
-                self.tr("Reloaded {0}").format(datetime.now().isoformat(sep=" ", timespec="seconds"))
+        now: QtCore.QDateTime = QtCore.QDateTime.currentDateTime()
+        self.status_bar.showMessage(
+            self.tr("Reloaded {date} at {time}").format(
+                date=self.locale().toString(now.date(), QtCore.QLocale.FormatType.NarrowFormat),
+                time=self.locale().toString(now.time(), QtCore.QLocale.FormatType.NarrowFormat),
             )
+        )
