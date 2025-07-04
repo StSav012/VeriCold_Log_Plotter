@@ -483,6 +483,13 @@ class Plot(QtWidgets.QWidget):
         self.end_y.doubleClicked.connect(partial(self.auto_range_y, start=False, end=True))
         self.y_span.doubleClicked.connect(partial(self.auto_range_y, start=True, end=True))
 
+        now: QtCore.QDateTime = QtCore.QDateTime.currentDateTime()
+        self.canvas.vb.setXRange(
+            now.toMSecsSinceEpoch() / 1000.0 - 1800.0,
+            now.toMSecsSinceEpoch() / 1000.0 + 1800.0,
+            padding=0.0,
+        )
+
     def auto_range_x(self, start: bool = True, end: bool = True) -> None:
         if not self.lines:
             return
