@@ -289,8 +289,8 @@ class Plot(QtWidgets.QWidget):
             self.time_span.blockSignals(False)
             with self._axis_range_changed_signal_proxy.block():
                 self.canvas.vb.setXRange(
-                    self.start_time.dateTime().toPython().timestamp(),
-                    self.end_time.dateTime().toPython().timestamp(),
+                    self.start_time.dateTime().toMSecsSinceEpoch() / 1000.0,
+                    self.end_time.dateTime().toMSecsSinceEpoch() / 1000.0,
                     padding=0.0,
                 )
 
@@ -307,8 +307,8 @@ class Plot(QtWidgets.QWidget):
             self.start_time.blockSignals(False)
             with self._axis_range_changed_signal_proxy.block():
                 self.canvas.vb.setXRange(
-                    self.start_time.dateTime().toPython().timestamp(),
-                    self.end_time.dateTime().toPython().timestamp(),
+                    self.start_time.dateTime().toMSecsSinceEpoch() / 1000.0,
+                    self.end_time.dateTime().toMSecsSinceEpoch() / 1000.0,
                     padding=0.0,
                 )
 
@@ -328,8 +328,8 @@ class Plot(QtWidgets.QWidget):
             self.start_time.blockSignals(False)
             with self._axis_range_changed_signal_proxy.block():
                 self.canvas.vb.setXRange(
-                    self.start_time.dateTime().toPython().timestamp(),
-                    self.end_time.dateTime().toPython().timestamp(),
+                    self.start_time.dateTime().toMSecsSinceEpoch() / 1000.0,
+                    self.end_time.dateTime().toMSecsSinceEpoch() / 1000.0,
                     padding=0.0,
                 )
 
