@@ -171,9 +171,9 @@ class Plot(QtWidgets.QWidget):
         self.start_y.setDisabled(True)
         self.end_y.setDisabled(True)
         self.y_span.setDisabled(True)
-        self.start_y.setRange(0 if self.canvas.getAxis("left").logMode else -np.inf, np.inf)
-        self.end_y.setRange(0 if self.canvas.getAxis("left").logMode else -np.inf, np.inf)
-        self.y_span.setRange(10 ** -self.y_span.decimals(), np.inf)
+        self.start_y.setRange(0.0 if self.canvas.getAxis("left").logMode else -np.inf, np.inf)
+        self.end_y.setRange(0.0 if self.canvas.getAxis("left").logMode else -np.inf, np.inf)
+        self.y_span.setRange(10.0 ** -self.y_span.decimals(), np.inf)
         y_range_layout.addWidget(self.end_y, 0, QtCore.Qt.AlignmentFlag.AlignTop)
         y_range_layout.addWidget(self.y_span, 0, QtCore.Qt.AlignmentFlag.AlignVCenter)
         y_range_layout.addWidget(self.start_y, 0, QtCore.Qt.AlignmentFlag.AlignBottom)
@@ -193,9 +193,9 @@ class Plot(QtWidgets.QWidget):
                     x: float = point.x()
                     y: float = point.y()
                     if self.canvas.axes["left"]["item"].logMode:
-                        y = 10**y
+                        y = 10.0**y
                     x_str: str = self.locale().toString(
-                        QtCore.QDateTime.fromMSecsSinceEpoch(round(x * 1000)),
+                        QtCore.QDateTime.fromMSecsSinceEpoch(round(x * 1000.0)),
                         QtCore.QLocale.FormatType.NarrowFormat,
                     )
                     y_str: str = self.locale().toString(y, "g", max(0, 6 - int(np.floor(np.log10(abs(y))))))
@@ -228,13 +228,13 @@ class Plot(QtWidgets.QWidget):
             self.start_y.blockSignals(True)
             self.end_y.blockSignals(True)
             self.y_span.blockSignals(True)
-            self.start_time.setDateTime(QtCore.QDateTime.fromMSecsSinceEpoch(round(x_min * 1000)))
-            self.end_time.setDateTime(QtCore.QDateTime.fromMSecsSinceEpoch(round(x_max * 1000)))
+            self.start_time.setDateTime(QtCore.QDateTime.fromMSecsSinceEpoch(round(x_min * 1000.0)))
+            self.end_time.setDateTime(QtCore.QDateTime.fromMSecsSinceEpoch(round(x_max * 1000.0)))
             self.time_span.from_two_q_date_time(self.start_time.dateTime(), self.end_time.dateTime())
             log_mode: bool = self.canvas.getAxis("left").logMode
-            self.start_y.setRange(0 if log_mode else -np.inf, np.inf)
-            self.end_y.setRange(0 if log_mode else -np.inf, np.inf)
-            start: float = 10**y_min if log_mode else y_min
+            self.start_y.setRange(0.0 if log_mode else -np.inf, np.inf)
+            self.end_y.setRange(0.0 if log_mode else -np.inf, np.inf)
+            start: float = 10.0**y_min if log_mode else y_min
             end: float = 10.0**y_max if log_mode else y_max
             span: float = end - start
             decimals: int = max(
@@ -297,8 +297,8 @@ class Plot(QtWidgets.QWidget):
         @QtCore.Slot(QtCore.QDateTime)
         def on_end_time_changed(new_time: QtCore.QDateTime) -> None:
             self.start_time.blockSignals(True)
-            if new_time.addMSecs(-round(self.time_span.total_seconds * 1000)) >= self.start_time.minimumDateTime():
-                self.start_time.setDateTime(new_time.addMSecs(-round(self.time_span.total_seconds * 1000)))
+            if new_time.addMSecs(-round(self.time_span.total_seconds * 1000.0)) >= self.start_time.minimumDateTime():
+                self.start_time.setDateTime(new_time.addMSecs(-round(self.time_span.total_seconds * 1000.0)))
             else:
                 self.start_time.setDateTime(self.start_time.minimumDateTime())
                 self.time_span.blockSignals(True)
@@ -316,10 +316,10 @@ class Plot(QtWidgets.QWidget):
         def on_time_span_changed(delta: timedelta) -> None:
             self.start_time.blockSignals(True)
             if (
-                self.end_time.dateTime().addMSecs(-round(delta.total_seconds() * 1000))
+                self.end_time.dateTime().addMSecs(-round(delta.total_seconds() * 1000.0))
                 >= self.start_time.minimumDateTime()
             ):
-                self.start_time.setDateTime(self.end_time.dateTime().addMSecs(-round(delta.total_seconds() * 1000)))
+                self.start_time.setDateTime(self.end_time.dateTime().addMSecs(-round(delta.total_seconds() * 1000.0)))
             else:
                 self.start_time.setDateTime(self.start_time.minimumDateTime())
                 self.time_span.blockSignals(True)
