@@ -269,7 +269,7 @@ class Plot(QtWidgets.QWidget):
             event.accept()
 
         self._mouse_moved_signal_proxy: SignalProxy = SignalProxy(
-            plot.scene().sigMouseMoved,
+            plot.sceneObj.sigMouseMoved,
             rateLimit=10,
             slot=on_mouse_moved,
         )
@@ -280,7 +280,7 @@ class Plot(QtWidgets.QWidget):
         )
         self._last_time_range_rolled: datetime = datetime.fromtimestamp(0)
         plot.leaveEvent = on_plot_left
-        plot.scene().sigMouseClicked.connect(on_mouse_clicked)
+        plot.sceneObj.sigMouseClicked.connect(on_mouse_clicked)
 
         @QtCore.Slot(QtCore.QDateTime)
         def on_start_time_changed(new_time: QtCore.QDateTime) -> None:
