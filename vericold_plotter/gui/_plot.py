@@ -235,7 +235,7 @@ class Plot(QtWidgets.QWidget):
             self.start_y.setRange(0 if log_mode else -np.inf, np.inf)
             self.end_y.setRange(0 if log_mode else -np.inf, np.inf)
             start: float = 10**y_min if log_mode else y_min
-            end: float = 10 * y_max if log_mode else y_max
+            end: float = 10.0**y_max if log_mode else y_max
             span: float = end - start
             decimals: int = max(
                 2,
