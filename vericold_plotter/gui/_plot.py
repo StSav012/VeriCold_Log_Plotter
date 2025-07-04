@@ -494,24 +494,24 @@ class Plot(QtWidgets.QWidget):
         y_max: float
         [[x_min, x_max], [y_min, y_max]] = self.canvas.vb.viewRange()
         for line in self.lines:
-            if not line.isVisible() or line.xData is None or not line.xData.size:
+            if not line.isVisible():
                 continue
-            visible_data.append(line.xData[(line.yData >= y_min) & (line.yData <= y_max)])
+            line_data_x: NDArray[np.float64] | None
+            line_data_y: NDArray[np.float64] | None
+            line_data_x, line_data_y = line.getData()
+            if line_data_x is None or not line_data_x.size:
+                continue
+            visible_line_data_x: NDArray[np.float64] = line_data_x[(line_data_y >= y_min) & (line_data_y <= y_max)]
+            if visible_line_data_x.size:
+                visible_data.append(visible_line_data_x)
         if not visible_data:
             return
         min_x: float = x_min
         max_x: float = x_max
-        if self.canvas.getAxis("bottom").logMode:
-            positive_data: list[NDArray[np.float64]] = [d[d > 0] for d in visible_data]
-            if start:
-                min_x = np.log10(min(cast(float, np.nanmin(d)) for d in positive_data))
-            if end:
-                max_x = np.log10(max(cast(float, np.nanmax(d)) for d in positive_data))
-        else:
-            if start:
-                min_x = min(cast(float, np.nanmin(d)) for d in visible_data)
-            if end:
-                max_x = max(cast(float, np.nanmax(d)) for d in visible_data)
+        if start:
+            min_x = min(cast(float, np.nanmin(d)) for d in visible_data)
+        if end:
+            max_x = max(cast(float, np.nanmax(d)) for d in visible_data)
         self.canvas.vb.setXRange(min_x, max_x, padding=0.0)
 
     def auto_range_y(self, start: bool = True, end: bool = True) -> None:
@@ -525,24 +525,24 @@ class Plot(QtWidgets.QWidget):
         y_max: float
         [[x_min, x_max], [y_min, y_max]] = self.canvas.vb.viewRange()
         for line in self.lines:
-            if not line.isVisible() or line.yData is None or not line.yData.size:
+            if not line.isVisible():
                 continue
-            visible_data.append(line.yData[(line.xData >= x_min) & (line.xData <= x_max)])
+            line_data_x: NDArray[np.float64] | None
+            line_data_y: NDArray[np.float64] | None
+            line_data_x, line_data_y = line.getData()
+            if line_data_y is None or not line_data_y.size:
+                continue
+            visible_line_data_y: NDArray[np.float64] = line_data_y[(line_data_x >= x_min) & (line_data_x <= x_max)]
+            if visible_line_data_y.size:
+                visible_data.append(visible_line_data_y)
         if not visible_data:
             return
         min_y: float = y_min
         max_y: float = y_max
-        if self.canvas.getAxis("left").logMode:
-            positive_data: list[NDArray[np.float64]] = [d[d > 0] for d in visible_data]
-            if start:
-                min_y = np.log10(min(cast(float, np.nanmin(d)) for d in positive_data))
-            if end:
-                max_y = np.log10(max(cast(float, np.nanmax(d)) for d in positive_data))
-        else:
-            if start:
-                min_y = min(cast(float, np.nanmin(d)) for d in visible_data)
-            if end:
-                max_y = max(cast(float, np.nanmax(d)) for d in visible_data)
+        if start:
+            min_y = min(cast(float, np.nanmin(d)) for d in visible_data)
+        if end:
+            max_y = max(cast(float, np.nanmax(d)) for d in visible_data)
         self.canvas.vb.setYRange(min_y, max_y, padding=0.0)
 
     def clear(self) -> None:
