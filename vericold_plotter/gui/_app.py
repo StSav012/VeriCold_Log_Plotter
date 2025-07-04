@@ -2,14 +2,14 @@ import os
 import sys
 from typing import Iterable, cast
 
-from packaging.version import parse
+from packaging.version import Version
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 __all__ = ["app"]
 
 
 app: QtWidgets.QApplication = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
-if parse(QtCore.qVersion()) < parse("6"):
+if Version(QtCore.qVersion()) < Version("6"):
     QtWidgets.QApplication.setAttribute(QtCore.Qt.ApplicationAttribute.AA_UseHighDpiPixmaps)
 
 qtbase_translator: QtCore.QTranslator = QtCore.QTranslator()
@@ -21,7 +21,7 @@ if qtbase_translator.load(
 ):
     QtWidgets.QApplication.installTranslator(qtbase_translator)
 
-if parse(QtCore.qVersion()) >= parse("6.5"):
+if Version(QtCore.qVersion()) >= Version("6.5"):
     self_color_scheme: QtCore.Qt.ColorScheme = QtWidgets.QApplication.styleHints().colorScheme()
     environ_color_scheme: str
     if environ_color_scheme := os.environ.get("THEME", "").casefold():
