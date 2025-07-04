@@ -1,3 +1,5 @@
+import sys
+
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 __all__ = ["run"]
@@ -22,6 +24,21 @@ if not hasattr(QtCore.QLibraryInfo, "LibraryPath"):  # PyQt5, PySide2
 
 if not hasattr(QtCore, "Slot"):  # PyQt5, PyQt6
     QtCore.Slot = QtCore.pyqtSlot  # type: ignore
+
+
+if sys.platform == "win32":
+
+    class DockWidget(QtWidgets.QDockWidget):
+        """A `QtWidgets.QDockWidget` that doesn't display an `&` in the title.
+
+        The issue occurs on Windows OS.
+        """
+
+        def initStyleOption(self, option: QtWidgets.QStyleOptionDockWidget) -> None:
+            super().initStyleOption(option)
+            option.title = option.title.replace("&", "")
+
+    QtWidgets.QDockWidget = DockWidget
 
 
 def run() -> int:
