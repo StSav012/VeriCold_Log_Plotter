@@ -287,11 +287,12 @@ class Plot(QtWidgets.QWidget):
             self.time_span.blockSignals(True)
             self.time_span.from_two_q_date_time(new_time, self.end_time.dateTime())
             self.time_span.blockSignals(False)
-            self.canvas.vb.setXRange(
-                self.start_time.dateTime().toPython().timestamp(),
-                self.end_time.dateTime().toPython().timestamp(),
-                padding=0.0,
-            )
+            with self._axis_range_changed_signal_proxy.block():
+                self.canvas.vb.setXRange(
+                    self.start_time.dateTime().toPython().timestamp(),
+                    self.end_time.dateTime().toPython().timestamp(),
+                    padding=0.0,
+                )
 
         @QtCore.Slot(QtCore.QDateTime)
         def on_end_time_changed(new_time: QtCore.QDateTime) -> None:
@@ -304,11 +305,12 @@ class Plot(QtWidgets.QWidget):
                 self.time_span.from_two_q_date_time(self.start_time.dateTime(), self.end_time.dateTime())
                 self.time_span.blockSignals(False)
             self.start_time.blockSignals(False)
-            self.canvas.vb.setXRange(
-                self.start_time.dateTime().toPython().timestamp(),
-                self.end_time.dateTime().toPython().timestamp(),
-                padding=0.0,
-            )
+            with self._axis_range_changed_signal_proxy.block():
+                self.canvas.vb.setXRange(
+                    self.start_time.dateTime().toPython().timestamp(),
+                    self.end_time.dateTime().toPython().timestamp(),
+                    padding=0.0,
+                )
 
         @QtCore.Slot(timedelta)
         def on_time_span_changed(delta: timedelta) -> None:
@@ -324,11 +326,12 @@ class Plot(QtWidgets.QWidget):
                 self.time_span.from_two_q_date_time(self.start_time.dateTime(), self.end_time.dateTime())
                 self.time_span.blockSignals(False)
             self.start_time.blockSignals(False)
-            self.canvas.vb.setXRange(
-                self.start_time.dateTime().toPython().timestamp(),
-                self.end_time.dateTime().toPython().timestamp(),
-                padding=0.0,
-            )
+            with self._axis_range_changed_signal_proxy.block():
+                self.canvas.vb.setXRange(
+                    self.start_time.dateTime().toPython().timestamp(),
+                    self.end_time.dateTime().toPython().timestamp(),
+                    padding=0.0,
+                )
 
         @QtCore.Slot(float)
         def on_start_y_changed(start: float) -> None:
