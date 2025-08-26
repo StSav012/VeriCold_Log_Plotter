@@ -1,0 +1,4 @@
+exclude .gitignore
+exclude requirements.txt
+exclude main.py
+prune .github
