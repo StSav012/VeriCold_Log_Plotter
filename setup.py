@@ -8,13 +8,9 @@ site.main()
 
 
 def required_packages() -> list[str]:
-    import sys
-
-    if sys.version_info < (3, 8):
-        raise SystemError("Python versions prior to 3.8 are not supported")
-
     import platform
-    from typing import NamedTuple, Sequence
+    from collections.abc import Sequence
+    from typing import NamedTuple
 
     class PackageRequirement(NamedTuple):
         package_name: str

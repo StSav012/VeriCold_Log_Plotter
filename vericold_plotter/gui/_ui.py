@@ -1,5 +1,6 @@
+from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import ClassVar, Iterable, Sequence, cast, final
+from typing import ClassVar, cast, final
 
 import numpy as np
 from numpy.typing import NDArray

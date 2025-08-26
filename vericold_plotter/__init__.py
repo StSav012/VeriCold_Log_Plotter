@@ -1,7 +1,8 @@
 import logging
 import os
 import sys
-from typing import Iterable, TextIO
+from collections.abc import Iterable
+from typing import TextIO
 
 import numpy as np
 from numpy.typing import NDArray
@@ -78,7 +79,7 @@ def _save_xlsx(filename: str, data: NDArray[np.float64], header: Iterable[str], 
     header = list(header)
 
     workbook: Workbook = Workbook()
-    worksheet: Worksheet = workbook.new_sheet(sheet_name)
+    worksheet: Worksheet.Worksheet = workbook.new_sheet(sheet_name)
     worksheet.panes = Panes(y=1)  # freeze first row
 
     header_style: Style = Style(font=Font(bold=True))
@@ -166,9 +167,6 @@ def gui() -> int:
         import traceback
 
         traceback.print_exc()
-        return 1
-    except SyntaxError:
-        print("Get a newer Python!", file=sys.stderr)
         return 1
     else:
         return run()

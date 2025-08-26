@@ -1,9 +1,10 @@
 import importlib.util
 import mimetypes
+from collections.abc import Collection, Iterable
 from contextlib import suppress
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, Collection, Iterable, NamedTuple, TextIO, cast, final
+from typing import Callable, NamedTuple, TextIO, cast, final
 
 import numpy as np
 from numpy.typing import NDArray
@@ -76,7 +77,7 @@ class FileDialog(QtWidgets.QFileDialog):
         header = list(header)
 
         workbook: Workbook = Workbook()
-        worksheet: Worksheet = workbook.new_sheet(Path(self.settings.opened_file_name).stem)
+        worksheet: Worksheet.Worksheet = workbook.new_sheet(Path(self.settings.opened_file_name).stem)
         worksheet.panes = Panes(y=1)  # freeze first row
 
         header_style: Style = Style(font=Font(bold=True))

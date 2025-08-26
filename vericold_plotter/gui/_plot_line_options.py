@@ -1,4 +1,5 @@
-from typing import ClassVar, Sequence
+from collections.abc import Sequence
+from typing import ClassVar
 
 from pyqtgraph import CONFIG_OPTIONS, ColorButton
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets

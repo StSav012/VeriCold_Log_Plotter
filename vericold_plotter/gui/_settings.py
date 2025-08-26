@@ -1,6 +1,7 @@
 import os
+from collections.abc import Sequence
 from pathlib import Path
-from typing import ClassVar, Sequence, cast
+from typing import ClassVar, cast
 
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 

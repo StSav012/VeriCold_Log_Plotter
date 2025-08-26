@@ -1,6 +1,7 @@
 import os
 import sys
-from typing import Iterable, cast
+from collections.abc import Iterable
+from typing import cast
 
 from packaging.version import Version
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets

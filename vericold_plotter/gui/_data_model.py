@@ -1,4 +1,4 @@
-from typing import Iterable, Sequence
+from collections.abc import Iterable, Sequence
 
 import numpy as np
 from numpy.typing import NDArray

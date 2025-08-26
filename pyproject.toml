@@ -1,5 +1,5 @@
 [build-system]
-requires = ['setuptools>=45', 'setuptools_scm[toml]>=6.2', 'packaging']
+requires = ['setuptools>=77.0.3', 'setuptools_scm[toml]>=6.2', 'packaging']
 
 [project]
 name = 'vericold_plotter'
@@ -8,14 +8,13 @@ authors = [
 ]
 description = 'VeriCold logfiles plotter'
 readme = 'README.md'
-license = {text = 'LGPLv3'}
-requires-python = '>=3.8'
+license = 'LGPL-3.0-or-later'
+requires-python = '>=3.9'
 classifiers = [
-    'Development Status :: 4 - Beta',
+    'Development Status :: 5 - Production/Stable',
     'Environment :: Win32 (MS Windows)',
     'Environment :: X11 Applications :: Qt',
     'Intended Audience :: Science/Research',
-    'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
     'Natural Language :: English',
     'Operating System :: OS Independent',
     'Programming Language :: Python :: 3 :: Only',
@@ -57,7 +56,6 @@ version = {attr = 'vericold_plotter._version.__version__'}
 ]
 
 [tool.black]
-target-versions = ["py38", "py311", "py312"]
 line-length = 120
 
 [tool.ruff]
@@ -75,7 +73,7 @@ exclude = [
 fixable = ["ALL"]
 unfixable = []
 extend-select = ["B", "D", "I", "ANN", "NPY", "RET", "SIM", "UP"]
-extend-ignore = ["D1", "EM1", "N8", "PLR", "TRY003"]
+extend-ignore = ["D1", "D203", "D213", "EM1", "N8", "PLR", "TRY003"]
 
 [tool.ruff.lint.isort]
 case-sensitive = true

@@ -1,7 +1,8 @@
+from collections.abc import Iterable
 from datetime import datetime, timedelta
 from functools import partial
 from itertools import cycle
-from typing import Iterable, TypeVar, cast
+from typing import TypeVar, cast
 
 import numpy as np
 from numpy.typing import NDArray
