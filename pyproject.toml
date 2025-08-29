@@ -9,7 +9,7 @@ authors = [
 description = 'VeriCold logfiles plotter'
 readme = 'README.md'
 license = 'LGPL-3.0-or-later'
-requires-python = '>=3.9'
+requires-python = '>=3.10'
 classifiers = [
     'Development Status :: 5 - Production/Stable',
     'Environment :: Win32 (MS Windows)',
