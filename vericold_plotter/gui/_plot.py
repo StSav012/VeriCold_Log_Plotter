@@ -586,6 +586,7 @@ class Plot(QtWidgets.QWidget):
                 y_column_names,
                 cycle(colors or [CONFIG_OPTIONS["foreground"]]),
                 visibility,
+                strict=False,
             ):
                 y_column: int = header.index(cast(str, y_column_name))  # no Nones here
                 x_column: int = y_column - 1
@@ -627,7 +628,10 @@ class Plot(QtWidgets.QWidget):
                 self.canvas.vb.setXRange(x_range[0], x_range[-1], padding=0.0)
         else:
             for y_column_name, color, visible in zip(
-                y_column_names, cycle(colors or [CONFIG_OPTIONS["foreground"]]), visibility
+                y_column_names,
+                cycle(colors or [CONFIG_OPTIONS["foreground"]]),
+                visibility,
+                strict=False,
             ):
                 line = self.canvas.plot(
                     [],
@@ -647,7 +651,7 @@ class Plot(QtWidgets.QWidget):
 
         good_lines: list[PlotDataItem] = [
             line
-            for line, visible in zip(self.lines, visibility)
+            for line, visible in zip(self.lines, visibility, strict=False)
             if (visible and line.yData is not None and line.yData.size and not np.all(np.isnan(line.yData)))
         ]
         if good_lines:

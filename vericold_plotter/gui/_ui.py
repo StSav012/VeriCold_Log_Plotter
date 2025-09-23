@@ -166,7 +166,7 @@ class MainWindow(QtWidgets.QMainWindow):
             return False
         titles: list[str]
         data: NDArray[np.float64]
-        if isinstance(file_name, (set, Sequence, Iterable)) and not isinstance(file_name, str):
+        if isinstance(file_name, set | Sequence | Iterable) and not isinstance(file_name, str):
             all_titles: list[list[str]] = []
             all_data: list[NDArray[np.float64]] = []
             _file_names: Iterable[str] = file_name
@@ -248,7 +248,7 @@ class MainWindow(QtWidgets.QMainWindow):
         data = data[..., np.any((data[1:] >= y_min) & (data[1:] <= y_max), axis=0)]
         somehow_visible_lines: list[bool] = [True] + [bool(np.any((d >= y_min) & (d <= y_max))) for d in data[1:]]
         data = data[somehow_visible_lines]
-        header = [h for h, b in zip(header, somehow_visible_lines) if b]
+        header = [h for h, b in zip(header, somehow_visible_lines, strict=True) if b]
         return data, header
 
     @property
