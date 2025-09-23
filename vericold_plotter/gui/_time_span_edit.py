@@ -35,7 +35,9 @@ class TimeSpanEdit(QtWidgets.QAbstractSpinBox):
     def _minimum_size(self) -> QtCore.QSize:
         # from the source of QAbstractSpinBox
         h: int = self.lineEdit().minimumSizeHint().height()
-        w: int = self.fontMetrics().horizontalAdvance(self._timedelta_to_text(timedelta.max) + " ")
+        w: int = self.fontMetrics().horizontalAdvance(
+            f"{timedelta.max.days}:00:00:00{self.locale().decimalPoint()}000 "
+        )
         w += 2  # cursor blinking space
         opt: QtWidgets.QStyleOptionSpinBox = QtWidgets.QStyleOptionSpinBox()
         self.initStyleOption(opt)
