@@ -159,6 +159,22 @@ class TimeSpanEdit(QtWidgets.QAbstractSpinBox):
 
         return QtGui.QValidator.State.Acceptable, text, cursor_position
 
+    def _timedelta_to_text(self, delta: timedelta) -> str:
+        days: int = delta.days
+        seconds: float = delta.seconds % 60 + 1e-6 * delta.microseconds
+        minutes: int = (delta.seconds // 60) % 60
+        hours: int = delta.seconds // 3600
+        seconds_str: str = (
+            f"{seconds:02.0f}"
+            if abs(seconds % 1.0) < 0.001
+            else f"{seconds:06.3f}".replace(".", self.locale().decimalPoint())
+        )
+        if days > 0:
+            return f"{days}:{hours:02d}:{minutes:02d}:{seconds_str}"
+        if hours > 0:
+            return f"{hours:02d}:{minutes:02d}:{seconds_str}"
+        return f"{minutes:02d}:{seconds_str}"
+
     @property
     def time_delta(self) -> timedelta:
         if not self.text():
@@ -193,7 +209,7 @@ class TimeSpanEdit(QtWidgets.QAbstractSpinBox):
         self.blockSignals(True)
         cursor_position: int = self.lineEdit().cursorPosition()
         place: int = self.text().count(":", cursor_position)
-        self.lineEdit().setText(_timedelta_to_text(delta))
+        self.lineEdit().setText(self._timedelta_to_text(delta))
         while cursor_position > 0 and self.text().count(":", cursor_position) < place:
             cursor_position -= 1
         while cursor_position < len(self.text()) and self.text().count(":", cursor_position) > place:
