@@ -6,24 +6,9 @@ from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 __all__ = ["TimeSpanEdit"]
 
 
-def _timedelta_to_text(delta: timedelta) -> str:
-    days: int = delta.days
-    seconds: float = delta.seconds % 60 + 1e-6 * delta.microseconds
-    minutes: int = (delta.seconds // 60) % 60
-    hours: int = delta.seconds // 3600
-    seconds_str: str = f"{seconds:02.0f}" if abs(seconds % 1.0) < 0.001 else f"{seconds:06.3f}"
-    if days > 0:
-        return f"{days}:{hours:02d}:{minutes:02d}:{seconds_str}"
-    if hours > 0:
-        return f"{hours:02d}:{minutes:02d}:{seconds_str}"
-    return f"{minutes:02d}:{seconds_str}"
-
-
 class TimeSpanEdit(QtWidgets.QAbstractSpinBox):
     timeSpanChanged: ClassVar[QtCore.Signal] = QtCore.Signal(timedelta, name="timeSpanChanged")
     doubleClicked: QtCore.Signal = QtCore.Signal(name="doubleClicked")
-
-    _MAX_TEXT: ClassVar[str] = _timedelta_to_text(timedelta.max)
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
@@ -47,25 +32,21 @@ class TimeSpanEdit(QtWidgets.QAbstractSpinBox):
         if not self.time_delta:
             self.time_delta = self._last_correct_delta
 
-    def sizeHint(self) -> QtCore.QSize:
+    def _minimum_size(self) -> QtCore.QSize:
         # from the source of QAbstractSpinBox
-        h: int = self.lineEdit().sizeHint().height()
-        w: int = self.fontMetrics().horizontalAdvance(TimeSpanEdit._MAX_TEXT + " ")
+        h: int = self.lineEdit().minimumSizeHint().height()
+        w: int = self.fontMetrics().horizontalAdvance(self._timedelta_to_text(timedelta.max) + " ")
         w += 2  # cursor blinking space
         opt: QtWidgets.QStyleOptionSpinBox = QtWidgets.QStyleOptionSpinBox()
         self.initStyleOption(opt)
         hint: QtCore.QSize = QtCore.QSize(w, h)
         return self.style().sizeFromContents(QtWidgets.QStyle.ContentsType.CT_SpinBox, opt, hint, self)
 
+    def sizeHint(self) -> QtCore.QSize:
+        return self._minimum_size()
+
     def minimumSizeHint(self) -> QtCore.QSize:
-        # from the source of QAbstractSpinBox
-        h: int = self.lineEdit().minimumSizeHint().height()
-        w: int = self.fontMetrics().horizontalAdvance(TimeSpanEdit._MAX_TEXT + " ")
-        w += 2  # cursor blinking space
-        opt: QtWidgets.QStyleOptionSpinBox = QtWidgets.QStyleOptionSpinBox()
-        self.initStyleOption(opt)
-        hint: QtCore.QSize = QtCore.QSize(w, h)
-        return self.style().sizeFromContents(QtWidgets.QStyle.ContentsType.CT_SpinBox, opt, hint, self)
+        return self._minimum_size()
 
     def stepBy(self, steps: int) -> None:
         cursor_position: int = self.lineEdit().cursorPosition()
