@@ -1,28 +1,70 @@
 import os
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
+from contextlib import contextmanager, suppress
 from pathlib import Path
-from typing import ClassVar, cast
+from typing import TYPE_CHECKING, ClassVar, NamedTuple, Self, TypeVar, cast, overload
 
 from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
 
 __all__ = ["Settings"]
+
+_T: TypeVar = TypeVar("_T")
 
 
 class Settings(QtCore.QSettings):
     """Convenient internal representation of the application settings."""
 
     LINE_ENDS: ClassVar[dict[str, str]] = {
-        "\n": QtWidgets.QApplication.translate("line end", r"Line Feed (\n)"),
-        "\r": QtWidgets.QApplication.translate("line end", r"Carriage Return (\r)"),
-        "\r\n": QtWidgets.QApplication.translate("line end", r"CR+LF (\r\n)"),
-        "\n\r": QtWidgets.QApplication.translate("line end", r"LF+CR (\n\r)"),
+        "\n": QtCore.QCoreApplication.translate("line end", r"Line Feed (\n)"),
+        "\r": QtCore.QCoreApplication.translate("line end", r"Carriage Return (\r)"),
+        "\r\n": QtCore.QCoreApplication.translate("line end", r"CR+LF (\r\n)"),
+        "\n\r": QtCore.QCoreApplication.translate("line end", r"LF+CR (\n\r)"),
     }
     CSV_SEPARATORS: ClassVar[dict[str, str]] = {
-        ",": QtWidgets.QApplication.translate("csv separator", r"comma (,)"),
-        "\t": QtWidgets.QApplication.translate("csv separator", r"tab (\t)"),
-        ";": QtWidgets.QApplication.translate("csv separator", r"semicolon (;)"),
-        " ": QtWidgets.QApplication.translate("csv separator", r"space ( )"),
+        ",": QtCore.QCoreApplication.translate("csv separator", r"comma (,)"),
+        "\t": QtCore.QCoreApplication.translate("csv separator", r"tab (\t)"),
+        ";": QtCore.QCoreApplication.translate("csv separator", r"semicolon (;)"),
+        " ": QtCore.QCoreApplication.translate("csv separator", r"space ( )"),
     }
+
+    if TYPE_CHECKING:
+        # to silence IDE warnings, make `value` return a provided type
+
+        @overload
+        def value(self, key: str, /) -> _T: ...
+        @overload
+        def value(self, key: str, /, default_value: _T = ...) -> _T: ...
+        @overload
+        def value(self, key: str, /, default_value: _T = ..., value_type: type[_T] = ...) -> _T: ...
+        def value(self, key: str, /, default_value: _T = ..., value_type: type[_T] = ...) -> _T:
+            return cast(_T, super().value(key, default_value, value_type))
+
+    class CheckBox(NamedTuple):
+        callback: str
+
+    class PathEntry(NamedTuple):
+        callback: str
+
+    class ComboBox(NamedTuple):
+        callback: str
+        text: Sequence[str]
+        data: Sequence[str] | None = None
+
+    class SpinBox(NamedTuple):
+        callback: str
+        min: int
+        max: int
+        step: int = 1
+        prefix: str = ""
+        suffix: str = ""
+
+    class DoubleSpinBox(NamedTuple):
+        callback: str
+        min: float
+        max: float
+        step: float
+        prefix: str = ""
+        suffix: str = ""
 
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
@@ -33,39 +75,37 @@ class Settings(QtCore.QSettings):
         self.line_enabled: dict[str, bool] = dict()
         self.data_series_names: dict[int, str] = dict()
 
-        self.beginGroup("plot")
-        key: str
-        for key in self.allKeys():
-            if key.endswith(" color"):
-                self.line_colors[key[:-6]] = cast(QtGui.QColor, self.value(key))
-            if key.endswith(" enabled"):
-                self.line_enabled[key[:-8]] = cast(bool, self.value(key, False, bool))
+        with self.section("plot"):
+            key: str
+            for key in self.allKeys():
+                if key.endswith(" color"):
+                    self.line_colors[key.removesuffix(" color")] = cast(QtGui.QColor, self.value(key))
+                if key.endswith(" enabled"):
+                    self.line_enabled[key.removesuffix(" enabled")] = cast(bool, self.value(key, False, bool))
 
-        i: int
-        for i in range(self.beginReadArray("dataSeries")):
-            self.setArrayIndex(i)
-            self.data_series_names[i] = cast(str, self.value("name"))
-        self.endArray()
-        self.endGroup()
+            i: int
+            for i in range(self.beginReadArray("dataSeries")):
+                self.setArrayIndex(i)
+                self.data_series_names[i] = cast(str, self.value("name"))
+            self.endArray()
 
     def sync(self) -> None:
-        self.beginGroup("plot")
-        key: str
-        color: QtGui.QColor
-        enabled: bool
-        for key, color in self.line_colors.items():
-            self.setValue(f"{key} color", color)
-        for key, enabled in self.line_enabled.items():
-            self.setValue(f"{key} enabled", enabled)
+        with self.section("plot"):
+            key: str
+            color: QtGui.QColor
+            enabled: bool
+            for key, color in self.line_colors.items():
+                self.setValue(f"{key} color", color)
+            for key, enabled in self.line_enabled.items():
+                self.setValue(f"{key} enabled", enabled)
 
-        i: int
-        n: str
-        self.beginWriteArray("dataSeries", len(self.data_series_names))
-        for i, n in self.data_series_names.items():
-            self.setArrayIndex(i)
-            self.setValue("name", n)
-        self.endArray()
-        self.endGroup()
+            i: int
+            n: str
+            self.beginWriteArray("dataSeries", len(self.data_series_names))
+            for i, n in self.data_series_names.items():
+                self.setArrayIndex(i)
+                self.setValue("name", n)
+            self.endArray()
 
         super().sync()
 
@@ -73,176 +113,189 @@ class Settings(QtCore.QSettings):
     def dialog(
         self,
     ) -> dict[
-        str, dict[str, tuple[str]] | dict[str, tuple[Path]] | dict[str, tuple[Sequence[str], Sequence[str], str]]
+        str,
+        dict[str, CheckBox | PathEntry | ComboBox | SpinBox | DoubleSpinBox],
     ]:
         return {
             self.tr("View"): {
-                self.tr("Translation file:"): ("translation_path",),
-                self.tr("Lines count (restart to apply):"): (
-                    slice(1, 99),
-                    (),
-                    Settings.plot_lines_count.fget.__name__,
+                self.tr("Translation file:"): Settings.PathEntry(
+                    callback=Settings.translation_path.fget.__name__,
+                ),
+                self.tr("Lines count (restart to apply):"): Settings.SpinBox(
+                    callback=Settings.plot_lines_count.fget.__name__,
+                    min=1,
+                    max=99,
                 ),
             },
             self.tr("Export"): {
-                self.tr("Line ending:"): (
+                self.tr("Line ending:"): Settings.ComboBox(
+                    Settings.line_end.fget.__name__,
                     list(Settings.LINE_ENDS.values()),
                     list(Settings.LINE_ENDS.keys()),
-                    "line_end",
                 ),
-                self.tr("CSV separator:"): (
+                self.tr("CSV separator:"): Settings.ComboBox(
+                    Settings.csv_separator.fget.__name__,
                     list(Settings.CSV_SEPARATORS.values()),
                     list(Settings.CSV_SEPARATORS.keys()),
-                    "csv_separator",
                 ),
             },
         }
 
+    @contextmanager
+    def section(self, section: str) -> Iterator[Self]:
+        self.beginGroup(section)
+        try:
+            yield self
+        finally:
+            self.endGroup()
+
+    def save(self, w: QtWidgets.QWidget) -> None:
+        name: str = w.objectName()
+        if not name:
+            raise AttributeError(f"No name given for {w}")
+        with suppress(AttributeError), self.section("state"):
+            # noinspection PyUnresolvedReferences
+            self.setValue(name, w.saveState())
+        with suppress(AttributeError), self.section("geometry"):
+            # noinspection PyUnresolvedReferences
+            self.setValue(name, w.saveGeometry())
+
+    def restore(self, w: QtWidgets.QWidget) -> None:
+        name: str = w.objectName()
+        if not name:
+            raise AttributeError(f"No name given for {w}")
+        with suppress(AttributeError), self.section("state"):
+            # noinspection PyUnresolvedReferences
+            w.restoreState(self.value(name, QtCore.QByteArray()))
+        with suppress(AttributeError), self.section("geometry"):
+            # noinspection PyUnresolvedReferences
+            w.restoreGeometry(self.value(name, QtCore.QByteArray()))
+
     @property
     def line_end(self) -> str:
-        self.beginGroup("export")
-        v: int = cast(int, self.value("lineEnd", list(Settings.LINE_ENDS.keys()).index(os.linesep), int))
-        self.endGroup()
-        return list(Settings.LINE_ENDS.keys())[v]
+        with self.section("export"):
+            return list(Settings.LINE_ENDS.keys())[
+                cast(
+                    int,
+                    self.value(
+                        "lineEnd",
+                        list(Settings.LINE_ENDS.keys()).index(os.linesep),
+                        int,
+                    ),
+                )
+            ]
 
     @line_end.setter
     def line_end(self, new_value: str) -> None:
-        self.beginGroup("export")
-        self.setValue("lineEnd", list(Settings.LINE_ENDS.keys()).index(new_value))
-        self.endGroup()
+        with self.section("export"):
+            self.setValue("lineEnd", list(Settings.LINE_ENDS.keys()).index(new_value))
 
     @property
     def csv_separator(self) -> str:
-        self.beginGroup("export")
-        v: int = cast(int, self.value("csvSeparator", list(Settings.CSV_SEPARATORS.keys()).index("\t"), int))
-        self.endGroup()
-        return list(Settings.CSV_SEPARATORS.keys())[v]
+        with self.section("export"):
+            return list(Settings.CSV_SEPARATORS.keys())[
+                cast(
+                    int,
+                    self.value(
+                        "csvSeparator",
+                        list(Settings.CSV_SEPARATORS.keys()).index("\t"),
+                        int,
+                    ),
+                )
+            ]
 
     @csv_separator.setter
     def csv_separator(self, new_value: str) -> None:
-        self.beginGroup("export")
-        self.setValue("csvSeparator", list(Settings.CSV_SEPARATORS.keys()).index(new_value))
-        self.endGroup()
+        with self.section("export"):
+            self.setValue("csvSeparator", list(Settings.CSV_SEPARATORS.keys()).index(new_value))
 
     @property
     def translation_path(self) -> Path | None:
-        self.beginGroup("translation")
-        v: str = cast(str, self.value("filePath", "", str))
-        self.endGroup()
+        with self.section("translation"):
+            v: str = cast(str, self.value("filePath", "", str))
         return Path(v) if v else None
 
     @translation_path.setter
     def translation_path(self, new_value: Path | None) -> None:
-        self.beginGroup("translation")
-        self.setValue("filePath", str(new_value) if new_value is not None else "")
-        self.endGroup()
+        with self.section("translation"):
+            self.setValue("filePath", str(new_value) if new_value is not None else "")
 
     @property
     def plot_lines_count(self) -> int:
-        self.beginGroup("plot")
-        v: int = cast(int, self.value("plotLinesCount", 8, int))
-        self.endGroup()
-        return v
+        with self.section("plot"):
+            return cast(int, self.value("plotLinesCount", 8, int))
 
     @plot_lines_count.setter
     def plot_lines_count(self, plot_lines_count: int) -> None:
-        self.beginGroup("plot")
-        self.setValue("plotLinesCount", plot_lines_count)
-        self.endGroup()
+        with self.section("plot"):
+            self.setValue("plotLinesCount", plot_lines_count)
 
     @property
     def argument(self) -> str:
-        self.beginGroup("plot")
-        v: str = cast(str, self.value("xAxis"))
-        self.endGroup()
-        return v
+        with self.section("plot"):
+            return cast(str, self.value("xAxis"))
 
     @argument.setter
     def argument(self, new_value: str) -> None:
-        self.beginGroup("plot")
-        self.setValue("xAxis", new_value)
-        self.endGroup()
+        with self.section("plot"):
+            self.setValue("xAxis", new_value)
 
     @property
     def opened_file_name(self) -> str:
-        try:
-            self.beginGroup("location")
+        with self.section("location"):
             return cast(str, self.value("open", str(Path.cwd()), str))
-        finally:
-            self.endGroup()
 
     @opened_file_name.setter
     def opened_file_name(self, filename: str) -> None:
-        self.beginGroup("location")
-        self.setValue("open", filename)
-        self.endGroup()
+        with self.section("location"):
+            self.setValue("open", filename)
 
     @property
     def exported_file_name(self) -> str:
-        try:
-            self.beginGroup("location")
+        with self.section("location"):
             return cast(str, self.value("export", str(Path.cwd()), str))
-        finally:
-            self.endGroup()
 
     @exported_file_name.setter
     def exported_file_name(self, filename: str) -> None:
-        self.beginGroup("location")
-        self.setValue("export", filename)
-        self.endGroup()
+        with self.section("location"):
+            self.setValue("export", filename)
 
     @property
     def export_dialog_state(self) -> QtCore.QByteArray:
-        try:
-            self.beginGroup("location")
+        with self.section("location"):
             return cast(QtCore.QByteArray, self.value("exportDialogState", QtCore.QByteArray()))
-        finally:
-            self.endGroup()
 
     @export_dialog_state.setter
     def export_dialog_state(self, state: QtCore.QByteArray) -> None:
-        self.beginGroup("location")
-        self.setValue("exportDialogState", state)
-        self.endGroup()
+        with self.section("location"):
+            self.setValue("exportDialogState", state)
 
     @property
     def export_dialog_geometry(self) -> QtCore.QByteArray:
-        try:
-            self.beginGroup("location")
+        with self.section("location"):
             return cast(QtCore.QByteArray, self.value("exportDialogGeometry", QtCore.QByteArray()))
-        finally:
-            self.endGroup()
 
     @export_dialog_geometry.setter
     def export_dialog_geometry(self, state: QtCore.QByteArray) -> None:
-        self.beginGroup("location")
-        self.setValue("exportDialogGeometry", state)
-        self.endGroup()
+        with self.section("location"):
+            self.setValue("exportDialogGeometry", state)
 
     @property
     def open_dialog_state(self) -> QtCore.QByteArray:
-        try:
-            self.beginGroup("location")
+        with self.section("location"):
             return cast(QtCore.QByteArray, self.value("openDialogState", QtCore.QByteArray()))
-        finally:
-            self.endGroup()
 
     @open_dialog_state.setter
     def open_dialog_state(self, state: QtCore.QByteArray) -> None:
-        self.beginGroup("location")
-        self.setValue("openDialogState", state)
-        self.endGroup()
+        with self.section("location"):
+            self.setValue("openDialogState", state)
 
     @property
     def open_dialog_geometry(self) -> QtCore.QByteArray:
-        try:
-            self.beginGroup("location")
+        with self.section("location"):
             return cast(QtCore.QByteArray, self.value("openDialogGeometry", QtCore.QByteArray()))
-        finally:
-            self.endGroup()
 
     @open_dialog_geometry.setter
     def open_dialog_geometry(self, state: QtCore.QByteArray) -> None:
-        self.beginGroup("location")
-        self.setValue("openDialogGeometry", state)
-        self.endGroup()
+        with self.section("location"):
+            self.setValue("openDialogGeometry", state)

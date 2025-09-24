@@ -117,7 +117,6 @@ class MainWindow(QtWidgets.QMainWindow):
         event.accept()
 
     def load_settings(self) -> None:
-        self.settings.beginGroup("window")
         # Fallback: Center the window
         desktop: QtGui.QScreen = QtWidgets.QApplication.screens()[0]
         window_frame: QtCore.QRect = self.frameGeometry()
@@ -125,29 +124,20 @@ class MainWindow(QtWidgets.QMainWindow):
         window_frame.moveCenter(desktop_center)
         self.move(window_frame.topLeft())
 
-        # noinspection PyTypeChecker
-        self.restoreGeometry(cast(QtCore.QByteArray, self.settings.value("geometry", QtCore.QByteArray())))
-        # noinspection PyTypeChecker
-        self.restoreState(cast(QtCore.QByteArray, self.settings.value("state", QtCore.QByteArray())))
-        self.settings.endGroup()
+        self.settings.restore(self)
 
-        self.settings.beginGroup("plot")
-        self.plot.mouse_mode = cast(int, self.settings.value("mouseMode", ViewBox.PanMode, int))
-        self.plot.grid_x = cast(int, self.settings.value("gridX", 80, int))
-        self.plot.grid_y = cast(int, self.settings.value("gridY", 80, int))
-        self.settings.endGroup()
+        with self.settings.section("plot"):
+            self.plot.mouse_mode = cast(int, self.settings.value("mouseMode", ViewBox.PanMode, int))
+            self.plot.grid_x = cast(int, self.settings.value("gridX", 80, int))
+            self.plot.grid_y = cast(int, self.settings.value("gridY", 80, int))
 
     def save_settings(self) -> None:
-        self.settings.beginGroup("window")
-        self.settings.setValue("geometry", self.saveGeometry())
-        self.settings.setValue("state", self.saveState())
-        self.settings.endGroup()
+        self.settings.save(self)
 
-        self.settings.beginGroup("plot")
-        self.settings.setValue("mouseMode", self.plot.mouse_mode)
-        self.settings.setValue("gridX", self.plot.grid_x)
-        self.settings.setValue("gridY", self.plot.grid_y)
-        self.settings.endGroup()
+        with self.settings.section("plot"):
+            self.settings.setValue("mouseMode", self.plot.mouse_mode)
+            self.settings.setValue("gridX", self.plot.grid_x)
+            self.settings.setValue("gridY", self.plot.grid_y)
 
         self.settings.sync()
 
