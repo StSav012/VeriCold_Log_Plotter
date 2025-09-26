@@ -34,7 +34,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.dock_settings: QtWidgets.QDockWidget = QtWidgets.QDockWidget(self)
         self.box_settings: QtWidgets.QWidget = QtWidgets.QWidget(self.dock_settings)
-        self.settings_layout: QtWidgets.QVBoxLayout = QtWidgets.QVBoxLayout(self.box_settings)
+        self.settings_layout: QtWidgets.QVBoxLayout = QtWidgets.QVBoxLayout()
         self.layout_y_axis: QtWidgets.QFormLayout = QtWidgets.QFormLayout()
         self.combo_y_axis: ComboBox = ComboBox(self.box_settings)
         self.line_options_y_axis: list[PlotLineOptions] = [
@@ -91,13 +91,21 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.layout_y_axis.addRow(self.tr("y-axis:"), self.combo_y_axis)
         self.settings_layout.addLayout(self.layout_y_axis)
-        cb: PlotLineOptions
-        for cb in self.line_options_y_axis:
-            self.settings_layout.addWidget(cb)
+        self.box_settings.setLayout(self.settings_layout)
         self.addDockWidget(QtCore.Qt.DockWidgetArea.RightDockWidgetArea, self.dock_settings)
 
         self.setWindowTitle(MainWindow._initial_window_title)
         self.dock_settings.setWindowTitle(self.tr("&Options"))
+
+        cb: PlotLineOptions
+        for cb in self.line_options_y_axis:
+            self.plot.plot(
+                self.data_model,
+                (cb.option for cb in self.line_options_y_axis),
+                colors=(cb.color for cb in self.line_options_y_axis),
+                visibility=(cb.checked for cb in self.line_options_y_axis),
+            )
+            self.settings_layout.addWidget(cb)
 
         self.load_settings()
 
@@ -117,13 +125,6 @@ class MainWindow(QtWidgets.QMainWindow):
         event.accept()
 
     def load_settings(self) -> None:
-        # Fallback: Center the window
-        desktop: QtGui.QScreen = QtWidgets.QApplication.screens()[0]
-        window_frame: QtCore.QRect = self.frameGeometry()
-        desktop_center: QtCore.QPoint = desktop.availableGeometry().center()
-        window_frame.moveCenter(desktop_center)
-        self.move(window_frame.topLeft())
-
         self.settings.restore(self)
 
         with self.settings.section("plot"):
@@ -294,8 +295,39 @@ class MainWindow(QtWidgets.QMainWindow):
     @QtCore.Slot()
     def on_action_preferences_triggered(self) -> None:
         preferences_dialog: Preferences = Preferences(self.settings, self)
-        preferences_dialog.exec()
-        self.install_translation()
+        if preferences_dialog.exec() == Preferences.DialogCode.Accepted:
+            self.install_translation()
+
+            while len(self.line_options_y_axis) > self.settings.plot_lines_count > 0:
+                self.line_options_y_axis.pop().deleteLater()
+                self.plot.pop()
+            while len(self.line_options_y_axis) < self.settings.plot_lines_count:
+                cb: PlotLineOptions = PlotLineOptions(
+                    items=[],
+                    settings=self.settings,
+                    parent=self.dock_settings,
+                )
+                cb.itemChanged.connect(self.on_y_axis_changed)
+                cb.colorChanged.connect(self.on_color_changed)
+                cb.toggled.connect(self.on_line_toggled)
+                self.line_options_y_axis.append(cb)
+                self.settings_layout.addWidget(cb)
+                cb.show()  # required to calculate the `cb.options.minimumSizeHint` before filling items
+                cb.set_items(
+                    tuple(
+                        filter(
+                            lambda t: not (t.endswith("(secs)") or t.endswith("(s)")),
+                            self.data_model.header,
+                        )
+                    )
+                )
+                self.plot.append(
+                    data_model=self.data_model,
+                    y_column_name=cb.option,
+                    normalized=(self.combo_y_axis.currentIndex() == 1),
+                    color=cb.color,
+                    visible=cb.checked,
+                )
 
     @QtCore.Slot()
     def on_action_quit_triggered(self) -> None:

@@ -732,6 +732,59 @@ class Plot(QtWidgets.QWidget):
 
         self.canvas.scene().update()
 
+    def append(
+        self,
+        data_model: DataModel,
+        y_column_name: str,
+        *,
+        normalized: bool = False,
+        color: QtGui.QColor,
+        visible: bool,
+    ) -> None:
+        if y_column_name:
+            header: list[str] = data_model.header
+            y_column: int = header.index(cast(str, y_column_name))  # no Nones here
+            x_column: int = y_column - 1
+            while x_column >= 0:
+                if header[x_column].endswith(("(secs)", "(s)")):
+                    break
+                x_column -= 1
+            else:
+                return
+
+            x_data: NDArray[np.float64] = data_model[x_column]
+
+            changing: NDArray[np.bool_] = (
+                np.concatenate(([True], np.diff(x_data) != 0.0))
+                if x_data.shape[0] > 1
+                else np.full_like(x_data, True, dtype=np.bool_)
+            )
+
+            line = self.canvas.plot(
+                x_data[changing],
+                normalize(data_model[y_column][changing]) if normalized else data_model[y_column][changing],
+                pen=color,
+                label=y_column_name,
+            )
+            line.curve.opts["pen"].setCosmetic(True)
+            line.setVisible(visible)
+            self.lines.append(line)
+        else:
+            line = self.canvas.plot(
+                [],
+                [],
+                pen=color,
+                label=y_column_name,
+            )
+            line.curve.opts["pen"].setCosmetic(True)
+            line.setVisible(visible)
+            self.lines.append(line)
+
+    def pop(self, __index: int = -1) -> PlotDataItem:
+        line: PlotDataItem = self.lines.pop(__index)
+        self.canvas.removeItem(line)
+        return line
+
     def set_line_visible(self, index: int, visible: bool) -> None:
         self.lines[index].setVisible(visible)
 

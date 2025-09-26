@@ -32,14 +32,16 @@ class PlotLineOptions(QtWidgets.QWidget):
 
         self.settings: Settings = settings
 
-        self.layout: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout(self)
+        layout: QtWidgets.QHBoxLayout = QtWidgets.QHBoxLayout(self)
         self.check_box: QtWidgets.QCheckBox = QtWidgets.QCheckBox(self)
         self.options: QtWidgets.QComboBox = QtWidgets.QComboBox(self)
         self.color_selector: ColorButton = ColorButton(self)
 
-        self.layout.addWidget(self.check_box, 0)
-        self.layout.addWidget(self.options, 1)
-        self.layout.addWidget(self.color_selector, 0)
+        layout.addWidget(self.check_box, 0)
+        layout.addWidget(self.options, 1)
+        layout.addWidget(self.color_selector, 0)
+
+        self.setLayout(layout)
 
         self.set_items(items)
 
@@ -49,12 +51,16 @@ class PlotLineOptions(QtWidgets.QWidget):
 
         PlotLineOptions._count += 1
 
+    def deleteLater(self) -> None:
+        PlotLineOptions._count -= 1
+        super().deleteLater()
+
     def set_items(self, items: Sequence[str]) -> None:
         self.setEnabled(bool(items))
         self.options.blockSignals(True)
         self.options.clear()
         self.options.addItems(items)
-        if self._index < len(self.settings.data_series_names) and self.settings.data_series_names[self._index] in items:
+        if self.settings.data_series_names.get(self._index, ...) in items:
             self.options.setCurrentText(self.settings.data_series_names[self._index])
         self.color_selector.blockSignals(True)
         self.color_selector.setColor(

@@ -121,7 +121,7 @@ class Settings(QtCore.QSettings):
                 self.tr("Translation file:"): Settings.PathEntry(
                     callback=Settings.translation_path.fget.__name__,
                 ),
-                self.tr("Lines count (restart to apply):"): Settings.SpinBox(
+                self.tr("Lines count:"): Settings.SpinBox(
                     callback=Settings.plot_lines_count.fget.__name__,
                     min=1,
                     max=99,
