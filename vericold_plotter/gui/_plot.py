@@ -555,6 +555,7 @@ class Plot(QtWidgets.QWidget):
 
     def clear(self) -> None:
         self.canvas.clearPlots()
+        self.lines.clear()
 
     def plot(
         self,
