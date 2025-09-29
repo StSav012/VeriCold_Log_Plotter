@@ -610,7 +610,10 @@ class Plot(QtWidgets.QWidget):
                         )
 
                 changing: NDArray[np.bool_] = (
-                    np.concatenate(([True], np.diff(x_data) != 0.0))
+                    (
+                        np.concatenate(([~np.isnan(x_data[0])], (np.diff(x_data) != 0.0)))
+                        & ~(np.isnan(x_data) & np.isnan(np.roll(x_data, 1)))
+                    )
                     if x_data.shape[0] > 1
                     else np.full_like(x_data, True, dtype=np.bool_)
                 )
@@ -705,20 +708,22 @@ class Plot(QtWidgets.QWidget):
         else:
             return
 
+        line_x_data: NDArray[np.float64] | None = self.lines[index].xData
+        x_data: NDArray[np.float64] = data_model[x_column]
         if (
             roll
-            and self.lines[index].xData is not None
-            and self.lines[index].xData.size
+            and line_x_data is not None
+            and line_x_data.size
             and datetime.now() - self._last_time_range_rolled >= timedelta(seconds=1)  # don't roll too often
         ):
-            shift: float = data_model[x_column][-1] - self.lines[index].xData[-1]
+            shift: np.float64 = x_data[-1] - line_x_data[-1]
             x_axis: AxisItem = self.canvas.getAxis("bottom")
             self.canvas.vb.setXRange(min(x_axis.range) + shift, max(x_axis.range) + shift, padding=0.0)
             self._last_time_range_rolled = datetime.now()
 
-        x_data: NDArray[np.float64] = data_model[x_column]
         changing: NDArray[np.bool_] = (
-            np.concatenate(([True], np.diff(x_data) != 0.0))
+            np.concatenate(([~np.isnan(x_data[0])], (np.diff(x_data) != 0.0)))
+            & ~(np.isnan(x_data) & np.isnan(np.roll(x_data, 1)))
             if x_data.shape[0] > 1
             else np.full_like(x_data, True, dtype=np.bool_)
         )
@@ -741,6 +746,7 @@ class Plot(QtWidgets.QWidget):
         color: QtGui.QColor,
         visible: bool,
     ) -> None:
+        line: PlotDataItem
         if y_column_name:
             header: list[str] = data_model.header
             y_column: int = header.index(cast(str, y_column_name))  # no Nones here
@@ -755,7 +761,8 @@ class Plot(QtWidgets.QWidget):
             x_data: NDArray[np.float64] = data_model[x_column]
 
             changing: NDArray[np.bool_] = (
-                np.concatenate(([True], np.diff(x_data) != 0.0))
+                np.concatenate(([~np.isnan(x_data[0])], (np.diff(x_data) != 0.0)))
+                & ~(np.isnan(x_data) & np.isnan(np.roll(x_data, 1)))
                 if x_data.shape[0] > 1
                 else np.full_like(x_data, True, dtype=np.bool_)
             )
@@ -766,9 +773,6 @@ class Plot(QtWidgets.QWidget):
                 pen=color,
                 label=y_column_name,
             )
-            line.curve.opts["pen"].setCosmetic(True)
-            line.setVisible(visible)
-            self.lines.append(line)
         else:
             line = self.canvas.plot(
                 [],
@@ -776,9 +780,9 @@ class Plot(QtWidgets.QWidget):
                 pen=color,
                 label=y_column_name,
             )
-            line.curve.opts["pen"].setCosmetic(True)
-            line.setVisible(visible)
-            self.lines.append(line)
+        line.curve.opts["pen"].setCosmetic(True)
+        line.setVisible(visible)
+        self.lines.append(line)
 
     def pop(self, __index: int = -1) -> PlotDataItem:
         line: PlotDataItem = self.lines.pop(__index)
@@ -786,7 +790,9 @@ class Plot(QtWidgets.QWidget):
         return line
 
     def set_line_visible(self, index: int, visible: bool) -> None:
-        self.lines[index].setVisible(visible)
+        line: PlotDataItem = self.lines[index]
+        if visible != line.isVisible():
+            line.setVisible(visible)
 
     @property
     def view_range(self) -> list[list[float]]:
