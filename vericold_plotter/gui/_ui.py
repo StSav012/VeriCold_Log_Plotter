@@ -307,9 +307,6 @@ class MainWindow(QtWidgets.QMainWindow):
                     settings=self.settings,
                     parent=self.dock_settings,
                 )
-                cb.itemChanged.connect(self.on_y_axis_changed)
-                cb.colorChanged.connect(self.on_color_changed)
-                cb.toggled.connect(self.on_line_toggled)
                 self.line_options_y_axis.append(cb)
                 self.settings_layout.addWidget(cb)
                 cb.show()  # required to calculate the `cb.options.minimumSizeHint` before filling items
@@ -328,6 +325,9 @@ class MainWindow(QtWidgets.QMainWindow):
                     color=cb.color,
                     visible=cb.checked,
                 )
+                cb.itemChanged.connect(self.on_y_axis_changed)
+                cb.colorChanged.connect(self.on_color_changed)
+                cb.toggled.connect(self.on_line_toggled)
 
     @QtCore.Slot()
     def on_action_quit_triggered(self) -> None:
