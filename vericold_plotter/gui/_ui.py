@@ -210,8 +210,8 @@ class MainWindow(QtWidgets.QMainWindow):
         now: QtCore.QDateTime = QtCore.QDateTime.currentDateTime()
         self.status_bar.showMessage(
             self.tr("Loaded {date} at {time}").format(
-                date=self.locale().toString(now.date(), QtCore.QLocale.FormatType.NarrowFormat),
-                time=self.locale().toString(now.time(), QtCore.QLocale.FormatType.NarrowFormat),
+                date=self.locale().toString(now.date(), QtCore.QLocale.FormatType.ShortFormat),
+                time=self.locale().toString(now.time(), QtCore.QLocale.FormatType.ShortFormat),
             )
         )
         self.file_created = Path(self.settings.opened_file_name).lstat().st_mtime
@@ -414,7 +414,7 @@ class MainWindow(QtWidgets.QMainWindow):
         now: QtCore.QDateTime = QtCore.QDateTime.currentDateTime()
         self.status_bar.showMessage(
             self.tr("Reloaded {date} at {time}").format(
-                date=self.locale().toString(now.date(), QtCore.QLocale.FormatType.NarrowFormat),
-                time=self.locale().toString(now.time(), QtCore.QLocale.FormatType.NarrowFormat),
+                date=self.locale().toString(now.date(), QtCore.QLocale.FormatType.ShortFormat),
+                time=self.locale().toString(now.time(), QtCore.QLocale.FormatType.ShortFormat),
             )
         )
