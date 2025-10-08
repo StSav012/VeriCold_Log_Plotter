@@ -41,6 +41,9 @@ class PlotLineOptions(QtWidgets.QWidget):
         layout.addWidget(self.options, 1)
         layout.addWidget(self.color_selector, 0)
 
+        if all(d.type() != QtGui.QInputDevice.DeviceType.TouchScreen for d in QtGui.QInputDevice.devices()):
+            layout.setContentsMargins(0, 0, 0, 0)
+
         self.setLayout(layout)
 
         self.set_items(items)
