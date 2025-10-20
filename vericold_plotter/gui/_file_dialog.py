@@ -135,7 +135,8 @@ class FileDialog(QtWidgets.QFileDialog):
             MimeType((mimetypes.types_map[".csv"],), self._save_csv),
         ]
         if importlib.util.find_spec("pyexcelerate") is not None:
-            supported_formats.append(MimeType((mimetypes.types_map[".xlsx"],), self._save_xlsx))
+            with suppress(KeyError):
+                supported_formats.append(MimeType((mimetypes.types_map[".xlsx"],), self._save_xlsx))
         selected_format: MimeType | None = None
         if exported_filename:
             exported_file_mimetype: str | None = mimetypes.guess_type(exported_filename, strict=False)[0]
