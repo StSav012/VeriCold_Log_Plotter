@@ -1,10 +1,10 @@
 import importlib.util
 import mimetypes
-from collections.abc import Collection, Iterable
+from collections.abc import Callable, Collection, Iterable
 from contextlib import suppress
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, NamedTuple, TextIO, cast, final
+from typing import NamedTuple, TextIO, cast, final
 
 import numpy as np
 from numpy.typing import NDArray
