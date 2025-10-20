@@ -1,5 +1,5 @@
 import importlib.util
-import mimetypes
+import os
 from collections.abc import Callable, Collection, Iterable
 from contextlib import suppress
 from datetime import datetime
@@ -8,7 +8,7 @@ from typing import NamedTuple, TextIO, cast, final
 
 import numpy as np
 from numpy.typing import NDArray
-from pyqtgraph.Qt import QtWidgets
+from pyqtgraph.Qt import QtCore, QtWidgets
 
 from ._settings import Settings
 
@@ -16,7 +16,7 @@ __all__ = ["FileDialog"]
 
 
 class MimeType(NamedTuple):
-    mimetypes: Collection[str]
+    mimetypes: Collection[QtCore.QMimeType]
     saver: Callable[[str, NDArray[np.float64], Iterable[str]], None]
 
 
@@ -126,21 +126,21 @@ class FileDialog(QtWidgets.QFileDialog):
         return []
 
     def export(self, data: NDArray[np.float64], header: Iterable[str]) -> None:
-        mimetypes.init()
+        mime_db: QtCore.QMimeDatabase = QtCore.QMimeDatabase()
 
         exported_filename: str = self.settings.exported_file_name
         opened_filename: str = self.settings.opened_file_name
 
         supported_formats: list[MimeType] = [
-            MimeType((mimetypes.types_map[".csv"],), self._save_csv),
+            MimeType(mime_db.mimeTypesForFileName("*.csv"), self._save_csv),
         ]
         if importlib.util.find_spec("pyexcelerate") is not None:
             with suppress(KeyError):
-                supported_formats.append(MimeType((mimetypes.types_map[".xlsx"],), self._save_xlsx))
+                supported_formats.append(MimeType(mime_db.mimeTypesForFileName("*.xlsx"), self._save_xlsx))
         selected_format: MimeType | None = None
         if exported_filename:
-            exported_file_mimetype: str | None = mimetypes.guess_type(exported_filename, strict=False)[0]
-            if exported_file_mimetype is not None:
+            exported_file_mimetype: QtCore.QMimeType = mime_db.mimeTypeForName(exported_filename)
+            if exported_file_mimetype.isValid():
                 for supported_format in supported_formats:
                     if exported_file_mimetype in supported_format.mimetypes:
                         selected_format = supported_format
@@ -148,30 +148,30 @@ class FileDialog(QtWidgets.QFileDialog):
         elif supported_formats:
             selected_format = supported_formats[0]
 
-        supported_mimetypes: list[str] = []
+        supported_mimetypes: list[QtCore.QMimeType] = []
         for supported_format in supported_formats:
             supported_mimetypes.extend(supported_format.mimetypes)
 
         self.restoreGeometry(self.settings.export_dialog_geometry)
         self.restoreState(self.settings.export_dialog_state)
         self.setAcceptMode(QtWidgets.QFileDialog.AcceptMode.AcceptSave)
-        self.setMimeTypeFilters(supported_mimetypes)
+        self.setMimeTypeFilters([t.name() for t in supported_mimetypes])
         self.setOption(QtWidgets.QFileDialog.Option.HideNameFilterDetails, True)
         self.setWindowTitle(self.tr("Export"))
         if exported_filename or opened_filename:
-            self.setDirectory(exported_filename or opened_filename)
+            self.setDirectory(str(Path(exported_filename or opened_filename).parent))
         if selected_format is not None:
             try:
-                selected_mimetype: str = list(selected_format.mimetypes)[0]
+                selected_mimetype: QtCore.QMimeType = list(selected_format.mimetypes)[0]
             except LookupError:
                 pass
             else:
-                self.selectMimeTypeFilter(selected_mimetype)
+                self.selectMimeTypeFilter(selected_mimetype.name())
                 self.selectFile(
                     str(
                         Path(exported_filename or opened_filename)
                         .with_name(Path(opened_filename).name)
-                        .with_suffix(mimetypes.guess_extension(selected_mimetype, strict=False))
+                        .with_suffix(selected_mimetype.suffixes()[0])
                     )
                 )
 
@@ -179,20 +179,21 @@ class FileDialog(QtWidgets.QFileDialog):
             self.settings.export_dialog_state = self.saveState()
             self.settings.export_dialog_geometry = self.saveGeometry()
             new_file_name: str = self.selectedFiles()[0]
-            new_file_mimetype: str | None = mimetypes.guess_type(new_file_name, strict=False)[0]
-            if (new_file_mimetype is None or new_file_mimetype not in supported_mimetypes) and supported_mimetypes:
+            new_file_mimetype: QtCore.QMimeType = mime_db.mimeTypeForName(new_file_name)
+            if (
+                not new_file_mimetype.isValid() or new_file_mimetype not in supported_mimetypes
+            ) and supported_mimetypes:
                 new_file_mimetype = supported_mimetypes[0]
 
             # ensure the filename extension is correct
-            new_file_mimetype_extensions: list[str]
             if new_file_mimetype is None:
                 if supported_mimetypes:
                     new_file_mimetype = supported_mimetypes[0]
             else:
-                new_file_mimetype_extensions = mimetypes.guess_all_extensions(new_file_mimetype, strict=False)
+                new_file_mimetype_extensions: list[str] = new_file_mimetype.suffixes()
                 if new_file_mimetype_extensions:
                     new_file_name_ext: str = Path(new_file_name).suffix
-                    if new_file_name_ext not in new_file_mimetype_extensions:
+                    if new_file_name_ext.lstrip(os.extsep) not in new_file_mimetype_extensions:
                         new_file_name += new_file_mimetype_extensions[0]
 
             if new_file_mimetype is None:
